@@ -24,7 +24,8 @@ def too_old_data(sensor):
     last_measurement_time = last_measurement_time.replace(tzinfo=timezone.utc)
     print("last measurement time:", last_measurement_time)
     if last_measurement_time:
-        if datetime.now(timezone.utc) - last_measurement_time > timedelta(weeks=100):
+        date_now = datetime.now(timezone.utc)
+        if date_now - last_measurement_time > timedelta(weeks=100):
             print("data too old")
             return True
     print("data is recent")
