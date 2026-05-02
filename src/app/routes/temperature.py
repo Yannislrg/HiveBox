@@ -9,7 +9,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 BASE_URL = os.getenv("BASE_URL")
-BOX_ID = os.getenv("BOX_ID").split(",")
+BOX_ID = os.getenv("BOX_ID").split(",") if os.getenv("BOX_ID") else []
 
 
 def too_old_data(sensor):
