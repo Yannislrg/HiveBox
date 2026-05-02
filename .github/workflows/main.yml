@@ -86,10 +86,10 @@ jobs:
           tags: user/hivebox:latest
       - name: Call and check version end point
         run: |
-          docker run -d -p 8080:80 user/hivebox:latest
+          docker run -d -p 8080:8000 user/hivebox:latest
           sleep 5
           RESPONSE=$(curl -s http://localhost:8080/version)
-          if [[ "$RESPONSE" != "{\"Application Version\":\"v0.0.2\"}" ]]; then
-            echo "Version endpoint did not return expected response"
+          if [[ "$RESPONSE" != "{\"version\":\"v0.0.2\"}" ]]; then
+            echo "Version endpoint did not return expected response: $RESPONSE"
             exit 1
           fi
