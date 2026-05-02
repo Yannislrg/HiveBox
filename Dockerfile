@@ -20,7 +20,7 @@ WORKDIR /app
 COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 
 
-COPY --chown=appuser:appuser src/ .
+COPY --chown=appuser:appuser src/app/ .
 
 
 ENV PATH=/home/appuser/.local/bin:$PATH

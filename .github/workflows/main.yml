@@ -53,7 +53,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest test/
+          pytest tests/
   
   build_docker_image:
     timeout-minutes: 3
@@ -89,7 +89,7 @@ jobs:
           docker run -d -p 8080:80 user/hivebox:latest
           sleep 5
           RESPONSE=$(curl -s http://localhost:8080/version)
-          if [[ "$RESPONSE" != "{\"Application Version\":\"0.0.2\"}" ]]; then
+          if [[ "$RESPONSE" != "{\"Application Version\":\"v0.0.2\"}" ]]; then
             echo "Version endpoint did not return expected response"
             exit 1
           fi
