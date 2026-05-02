@@ -20,7 +20,7 @@ WORKDIR /app
 COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 
 
-COPY --chown=appuser:appuser src/app/ .
+COPY --chown=appuser:appuser src/ src/
 
 
 ENV PATH=/home/appuser/.local/bin:$PATH
@@ -29,4 +29,4 @@ USER appuser
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "src.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
