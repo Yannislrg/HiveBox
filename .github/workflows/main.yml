@@ -1,0 +1,95 @@
+name: main
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+    
+jobs:
+  lint_python:
+    timeout-minutes: 3
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13' 
+
+      - name: Install dependencies
+        run: pip install flake8
+      
+      - name: Lint with flake8
+        run: flake8 src/
+  
+  lint_docker:
+    timeout-minutes: 3
+    runs-on: ubuntu-latest
+    needs: lint_python
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ./Dockerfile
+  
+  run_tests:
+    timeout-minutes: 3
+    runs-on: ubuntu-latest
+    needs: lint_docker
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13' 
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest tests/
+  
+  build_docker_image:
+    timeout-minutes: 3
+    runs-on: ubuntu-latest
+    needs: run_tests
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: user/hivebox:latest
+    
+  call_version_end_point:
+    timeout-minutes: 3
+    runs-on: ubuntu-latest
+    needs: build_docker_image
+    steps:
+      - uses: actions/checkout@v5
+      - name: build docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: user/hivebox:latest
+      - name: Call and check version end point
+        run: |
+          docker run -d -p 8080:8000 user/hivebox:latest
+          sleep 5
+          RESPONSE=$(curl -s http://localhost:8080/version)
+          if [[ "$RESPONSE" != "{\"version\":\"v0.0.2\"}" ]]; then
+            echo "Version endpoint did not return expected response: $RESPONSE"
+            exit 1
+          fi
