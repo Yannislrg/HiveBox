@@ -99,7 +99,7 @@ def accumulate_temperature(data, box_id):
         reading = float(sensor["lastMeasurement"]["value"])
         logger.info(
             "Using temperature reading",
-            extra={"box_id": box_id, "value": sensor["lastMeasurement"]["value"]},
+            extra={"box_id": box_id, "value": reading},
         )
         temperature += reading
         box_active += 1
