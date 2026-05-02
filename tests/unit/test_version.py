@@ -10,5 +10,5 @@ def test_version_endpoint_returns_current_version() -> None:
     response = client.get("/version")
 
     assert response.status_code == 200
-    assert response.json() == {"version": "v0.0.1"}
+    assert response.json() == {"version": "v0.0.2"}
     
