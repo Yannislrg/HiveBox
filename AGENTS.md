@@ -26,3 +26,15 @@
 ## Useful references
 - `readme.md` — high-level repository structure
 - `.github/subject.md` — phased requirements and constraints
+
+## Critical Bugs
+- Data freshness check: `> 100 weeks` should be `> 1 hour` (currently skips all data)
+- Temperature status thresholds: code uses `<11`, `11-36`, `>36` but spec says `<10`, `10-37`, `>37`
+
+## Environment
+- Load `.env` before running API calls (required for `BASE_URL` and `BOX_ID`)
+- API calls use 30s timeout; handle `requests.RequestException` and `ValueError`
+
+## Docker
+- Runs uvicorn on port 8000
+- User `appuser` for security
