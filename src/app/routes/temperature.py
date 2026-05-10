@@ -4,6 +4,13 @@ import os
 
 import requests
 from fastapi import APIRouter, HTTPException
+from src.app.routes.metrics import (
+    CURRENT_TEMPERATURE,
+    TEMP_STATUS,
+    TEMPERATURE_HISTOGRAM,
+    TEMP_READINGS_COUNT,
+    TEMP_ENDPOINT_REQUESTS,
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -103,6 +110,11 @@ def accumulate_temperature(data, box_id):
         )
         temperature += reading
         box_active += 1
+        # Record metrics for temperature reading
+        CURRENT_TEMPERATURE.labels(box_id=box_id).set(reading)
+        TEMP_STATUS.labels(box_id=box_id).set(set_status(reading))
+        TEMPERATURE_HISTOGRAM.labels(box_id=box_id).observe(reading)
+        TEMP_READINGS_COUNT.labels(box_id=box_id).inc()
 
     return temperature, box_active
 
@@ -115,6 +127,7 @@ def get_avg_temperature():
         _type_: return avg temperature
     """
     logger.info("Temperature endpoint requested")
+    TEMP_ENDPOINT_REQUESTS.inc()
     temperature = 0.0
     box_active = 0
     for box_id in BOX_ID:
