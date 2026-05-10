@@ -36,29 +36,13 @@ jobs:
         with:
           dockerfile: ./Dockerfile
   
-  run_tests:
-    timeout-minutes: 3
-    runs-on: ubuntu-latest
-    needs: lint_docker
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.13' 
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Run tests
-        run: |
-          pytest tests/
+  # Tests have been moved to a dedicated workflow file `.github/workflows/tests.yml`.
   
   build_docker_image:
     timeout-minutes: 3
     runs-on: ubuntu-latest
-    needs: run_tests
+    # Keep build dependent on linting; tests run in a separate workflow `tests.yml`.
+    needs: lint_docker
 
     steps:
       - uses: actions/checkout@v5

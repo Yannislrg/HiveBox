@@ -1,0 +1,55 @@
+name: integration-tests
+on:
+  workflow_run:
+    workflows: ["build"]
+    types:
+      - completed
+
+jobs:
+  run_integration_tests:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull Docker image built by workflow `build`
+        run: |
+          IMAGE=ghcr.io/${{ github.repository_owner }}/hivebox:${{ github.event.workflow_run.head_sha }}
+          docker pull "$IMAGE"
+
+      - name: Run integration tests
+        run: |
+          # Start the container in the background
+          docker run -d -p 8000:8000 \
+            --name hivebox-integration-test \
+            "$IMAGE"
+          
+          # Wait for the application to be ready
+          echo "Waiting for application to be ready..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/version > /dev/null 2>&1; then
+              echo "Application is ready!"
+              break
+            fi
+            sleep 2
+          done
+
+          # Install dependencies
+          pip install -r requirements.txt
+
+          # Run integration tests
+          pytest tests/integration/ -v
+
+      - name: Cleanup container
+        if: always()
+        run: |
+          docker rm -f hivebox-integration-test 2>/dev/null || true
