@@ -46,14 +46,14 @@ def set_status(temperature):
     Returns:
         str: status
     """
-    if temperature < 11:
-        status = "Too cold"
+    if temperature < 10:
+        status = "Too Cold"
         return status
-    elif 11 <= temperature <= 36:
-        status = "good"
+    elif 10 <= temperature <= 37:
+        status = "Good"
         return status
     else:
-        status = "Too hot"
+        status = "Too Hot"
     return status
 
 
