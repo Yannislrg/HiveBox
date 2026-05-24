@@ -32,9 +32,15 @@ spec:
             requests:
               memory: "256Mi"
               cpu: "250m"
-          readinessProbe:
+          livenessProbe:
             httpGet:
               path: /version
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
               port: 8000
             initialDelaySeconds: 5
             periodSeconds: 10
