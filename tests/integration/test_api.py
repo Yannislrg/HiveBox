@@ -4,18 +4,18 @@ These tests run against the Docker container to verify end-to-end functionality.
 """
 
 import pytest
-import requests
-from requests.exceptions import HTTPError
+from fastapi.testclient import TestClient
+from src.app.main import app
 
 
 @pytest.fixture(scope="module")
 def client():
-    """Base URL for the API endpoint.
+    """Test client for the API.
     
     Returns:
-        str: The base URL where the API is running.
+        TestClient: The FastAPI test client.
     """
-    return "http://localhost:8000"
+    return TestClient(app)
 
 
 @pytest.fixture(scope="module")
@@ -23,12 +23,12 @@ def version_response(client):
     """Get the version endpoint response.
     
     Args:
-        client: The base URL for the API.
+        client: The test client.
     
     Returns:
-        requests.Response: The response from the /version endpoint.
+        Response: The response from the /version endpoint.
     """
-    return requests.get(f"{client}/version")
+    return client.get("/version")
 
 
 @pytest.fixture(scope="module")
@@ -36,12 +36,12 @@ def temperature_response(client):
     """Get the temperature endpoint response.
     
     Args:
-        client: The base URL for the API.
+        client: The test client.
     
     Returns:
-        requests.Response: The response from the /temperature endpoint.
+        Response: The response from the /temperature endpoint.
     """
-    return requests.get(f"{client}/temperature")
+    return client.get("/temperature")
 
 
 @pytest.fixture(scope="module")
@@ -49,12 +49,12 @@ def metrics_response(client):
     """Get the metrics endpoint response.
     
     Args:
-        client: The base URL for the API.
+        client: The test client.
     
     Returns:
-        requests.Response: The response from the /metrics endpoint.
+        Response: The response from the /metrics endpoint.
     """
-    return requests.get(f"{client}/metrics")
+    return client.get("/metrics")
 
 
 class TestVersionEndpoint:
@@ -231,54 +231,54 @@ class TestEndpointHealth:
         """Test that all endpoints are accessible.
         
         Args:
-            client: The base URL for the API.
+            client: The test client.
         
         Asserts:
             All three endpoints return HTTP 200.
         """
         endpoints = [
-            f"{client}/version",
-            f"{client}/temperature",
-            f"{client}/metrics",
+            "/version",
+            "/temperature",
+            "/metrics",
         ]
         for endpoint in endpoints:
-            response = requests.get(endpoint)
+            response = client.get(endpoint)
             assert response.status_code == 200, f"Endpoint {endpoint} returned status {response.status_code}"
 
     def test_version_endpoint_does_not_crash(self, client):
         """Test that /version endpoint does not crash.
         
         Args:
-            client: The base URL for the API.
+            client: The test client.
         
         Asserts:
             The /version endpoint returns a valid response.
         """
-        response = requests.get(f"{client}/version")
+        response = client.get("/version")
         assert response.status_code == 200
 
     def test_temperature_endpoint_does_not_crash(self, client):
         """Test that /temperature endpoint does not crash.
         
         Args:
-            client: The base URL for the API.
+            client: The test client.
         
         Asserts:
             The /temperature endpoint returns a valid response.
         """
-        response = requests.get(f"{client}/temperature")
+        response = client.get("/temperature")
         assert response.status_code == 200
 
     def test_metrics_endpoint_does_not_crash(self, client):
         """Test that /metrics endpoint does not crash.
         
         Args:
-            client: The base URL for the API.
+            client: The test client.
         
         Asserts:
             The /metrics endpoint returns a valid response.
         """
-        response = requests.get(f"{client}/metrics")
+        response = client.get("/metrics")
         assert response.status_code == 200
 
 

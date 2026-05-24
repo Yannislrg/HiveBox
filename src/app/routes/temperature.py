@@ -1,3 +1,4 @@
+"""datetime is used for time manipulation across the code."""
 from datetime import datetime, timedelta, timezone
 import logging
 import os
@@ -64,6 +65,9 @@ def set_status(temperature):
     return status
 
 
+STATUS_MAP = {"Too Cold": 0.0, "Good": 1.0, "Too Hot": 2.0}
+
+
 def fetch_box_data(box_id):
     """Fetch sensor data for a single box."""
     logger.info("Fetching temperature data for box", extra={"box_id": box_id})
@@ -112,7 +116,8 @@ def accumulate_temperature(data, box_id):
         box_active += 1
         # Record metrics for temperature reading
         CURRENT_TEMPERATURE.labels(box_id=box_id).set(reading)
-        TEMP_STATUS.labels(box_id=box_id).set(set_status(reading))
+        status_str = set_status(reading)
+        TEMP_STATUS.labels(box_id=box_id).set(STATUS_MAP.get(status_str, 1.0))
         TEMPERATURE_HISTOGRAM.labels(box_id=box_id).observe(reading)
         TEMP_READINGS_COUNT.labels(box_id=box_id).inc()
 

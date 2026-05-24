@@ -1,1 +1,40 @@
-
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hivebox-deployment
+  labels:
+    app: HiveBox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: HiveBox
+  template:
+    metadata:
+      labels:
+        app: HiveBox
+    spec:
+      containers:
+        - name: hivebox-container
+          image: hivebox:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          env:
+            - name: BASE_URL
+              value: "https://api.opensensemap.org"
+            - name: BOX_ID
+              value: "5eba5fbad46fb8001b799786,5c21ff8f919bf8001adf2488,5ade1acf223bd80019a1011c"
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+          readinessProbe:
+            httpGet:
+              path: /version
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10

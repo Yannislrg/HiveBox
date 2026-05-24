@@ -45,7 +45,7 @@ def test_metrics_endpoint_increments_counter(client):
     response1 = client.get("/metrics")
     content1 = response1.text
     metrics_endpoint_requests1 = sum(
-        int(line.split(" ")[1])
+        float(line.split(" ")[1])
         for line in content1.split("\n")
         if line.startswith("hivebox_metrics_endpoint_requests_total")
     )
@@ -54,7 +54,7 @@ def test_metrics_endpoint_increments_counter(client):
     response2 = client.get("/metrics")
     content2 = response2.text
     metrics_endpoint_requests2 = sum(
-        int(line.split(" ")[1])
+        float(line.split(" ")[1])
         for line in content2.split("\n")
         if line.startswith("hivebox_metrics_endpoint_requests_total")
     )

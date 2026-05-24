@@ -7,7 +7,7 @@ from prometheus_client import (
     generate_latest,
     CONTENT_TYPE_LATEST,
 )
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 import logging
 
 logger = logging.getLogger(__name__)
@@ -68,8 +68,8 @@ def get_metrics():
     """Expose Prometheus metrics endpoint.
 
     Returns:
-        str: Prometheus-formatted metrics
+        Response: Prometheus-formatted metrics
     """
     logger.info("Metrics endpoint requested")
     METRICS_ENDPOINT_REQUESTS.inc()
-    return generate_latest()
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
