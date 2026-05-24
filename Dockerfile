@@ -9,7 +9,7 @@ COPY Pipfile Pipfile.lock ./
 RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy --ignore-pipfile
 
 
-FROM python:3.14-slim
+FROM python:3.13-slim
 
 LABEL maintainer="HiveBox Team"
 LABEL description="HiveBox - Environmental sensor data API"
