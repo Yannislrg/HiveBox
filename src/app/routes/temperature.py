@@ -1,9 +1,17 @@
+"""datetime is used for time manipulation across the code."""
 from datetime import datetime, timedelta, timezone
 import logging
 import os
 
 import requests
 from fastapi import APIRouter, HTTPException
+from src.app.routes.metrics import (
+    CURRENT_TEMPERATURE,
+    TEMP_STATUS,
+    TEMPERATURE_HISTOGRAM,
+    TEMP_READINGS_COUNT,
+    TEMP_ENDPOINT_REQUESTS,
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -46,15 +54,18 @@ def set_status(temperature):
     Returns:
         str: status
     """
-    if temperature < 11:
-        status = "Too cold"
+    if temperature < 10:
+        status = "Too Cold"
         return status
-    elif 11 <= temperature <= 36:
-        status = "good"
+    elif 10 <= temperature <= 37:
+        status = "Good"
         return status
     else:
-        status = "Too hot"
+        status = "Too Hot"
     return status
+
+
+STATUS_MAP = {"Too Cold": 0.0, "Good": 1.0, "Too Hot": 2.0}
 
 
 def fetch_box_data(box_id):
@@ -103,6 +114,12 @@ def accumulate_temperature(data, box_id):
         )
         temperature += reading
         box_active += 1
+        # Record metrics for temperature reading
+        CURRENT_TEMPERATURE.labels(box_id=box_id).set(reading)
+        status_str = set_status(reading)
+        TEMP_STATUS.labels(box_id=box_id).set(STATUS_MAP.get(status_str, 1.0))
+        TEMPERATURE_HISTOGRAM.labels(box_id=box_id).observe(reading)
+        TEMP_READINGS_COUNT.labels(box_id=box_id).inc()
 
     return temperature, box_active
 
@@ -115,6 +132,7 @@ def get_avg_temperature():
         _type_: return avg temperature
     """
     logger.info("Temperature endpoint requested")
+    TEMP_ENDPOINT_REQUESTS.inc()
     temperature = 0.0
     box_active = 0
     for box_id in BOX_ID:

@@ -1,29 +1,29 @@
-FROM python:3.14-slim AS builder
+FROM python:3.13-slim AS builder
 
-WORKDIR /tmp
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uv /usr/bin/
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+WORKDIR /app
+
+ENV UV_COMPILE_BYTECODE=1
+
+COPY pyproject.toml uv.lock ./
+
+RUN uv sync --frozen --no-dev
 
 
-FROM python:3.14-slim
+FROM python:3.13-slim
 
 LABEL maintainer="HiveBox Team"
 LABEL description="HiveBox - Environmental sensor data API"
-
 
 RUN useradd -m -u 1000 appuser
 
 WORKDIR /app
 
-
-COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
-
-
+COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
 COPY --chown=appuser:appuser src/ src/
 
-
-ENV PATH=/home/appuser/.local/bin:$PATH
+ENV PATH="/app/.venv/bin:$PATH"
 
 USER appuser
 
