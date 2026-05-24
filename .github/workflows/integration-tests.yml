@@ -23,7 +23,10 @@ jobs:
 
       - name: Pull Docker image built by workflow `build`
         run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/hivebox:${{ github.event.workflow_run.head_sha }}
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha }}" | cut -c1-7)
+          IMAGE="ghcr.io/${OWNER}/hivebox:sha-${SHORT_SHA}"
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
           docker pull "$IMAGE"
 
       - name: Run integration tests
@@ -44,7 +47,7 @@ jobs:
           done
 
           # Install dependencies
-          pip install -r requirements.txt
+          pip install --only-binary :all: -r requirements.txt
 
           # Run integration tests
           pytest tests/integration/ -v

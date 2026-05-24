@@ -18,7 +18,7 @@ jobs:
           python-version: '3.13' 
 
       - name: Install dependencies
-        run: pip install flake8
+        run: pip install --only-binary :all: flake8==7.1.1
       
       - name: Lint with flake8
         run: flake8 src/

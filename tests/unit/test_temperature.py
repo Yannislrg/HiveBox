@@ -1,7 +1,7 @@
 """Tests for temperature endpoint."""
 
 from unittest.mock import MagicMock, patch
-
+import pytest
 from fastapi.testclient import TestClient
 
 from src.app.main import app
@@ -30,7 +30,7 @@ def test_avg_temperature_good_status(mock_get):
 
     response = client.get("/temperature")
     assert response.status_code == 200
-    assert response.json()["average_temperature"] == 22.5
+    assert response.json()["average_temperature"] == pytest.approx(22.5)
     assert response.json()["status"] == "Good"
 
 
@@ -54,7 +54,7 @@ def test_avg_temperature_too_cold_status(mock_get):
 
     response = client.get("/temperature")
     assert response.status_code == 200
-    assert response.json()["average_temperature"] == 5.0
+    assert response.json()["average_temperature"] == pytest.approx(5.0)
     assert response.json()["status"] == "Too Cold"
 
 
@@ -78,7 +78,7 @@ def test_avg_temperature_too_hot_status(mock_get):
 
     response = client.get("/temperature")
     assert response.status_code == 200
-    assert response.json()["average_temperature"] == 40.0
+    assert response.json()["average_temperature"] == pytest.approx(40.0)
     assert response.json()["status"] == "Too Hot"
 
 

@@ -27,8 +27,9 @@ jobs:
           else
             VERSION="sha-${GITHUB_SHA::7}"
           fi
+          OWNER=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY_OWNER}/hivebox" >> $GITHUB_ENV
+          echo "IMAGE_NAME=ghcr.io/${OWNER}/hivebox" >> $GITHUB_ENV
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3

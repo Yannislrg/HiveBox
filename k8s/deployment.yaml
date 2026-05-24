@@ -14,6 +14,7 @@ spec:
       labels:
         app: HiveBox
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: hivebox-container
           image: hivebox:local
@@ -29,9 +30,11 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+              ephemeral-storage: "1Gi"
             requests:
               memory: "256Mi"
               cpu: "250m"
+              ephemeral-storage: "512Mi"
           readinessProbe:
             httpGet:
               path: /version
