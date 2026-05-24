@@ -12,9 +12,13 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Install Terrascan
+        run: |
+          LATEST_URL=$(curl -s https://api.github.com/repos/tenable/terrascan/releases/latest | grep -o -E "https://.+?_Linux_x86_64.tar.gz")
+          curl -L "$LATEST_URL" > terrascan.tar.gz
+          tar -xf terrascan.tar.gz terrascan
+          install terrascan /usr/local/bin
+          terrascan init
+
       - name: Run Terrascan
-        uses: tenable/terrascan-action@main
-        with:
-          iac_type: 'k8s'
-          path: '.'
-          non_recursive: false
+        run: terrascan scan -t k8s -d .

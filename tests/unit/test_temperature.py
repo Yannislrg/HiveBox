@@ -1,14 +1,10 @@
 """Tests for temperature endpoint."""
 
 from unittest.mock import MagicMock, patch
-import pytest
 from fastapi.testclient import TestClient
-
 from src.app.main import app
 
-
 client = TestClient(app)
-
 
 @patch("src.app.routes.temperature.BOX_ID", ["test_box"])
 @patch("src.app.routes.temperature.requests.get")
@@ -30,9 +26,8 @@ def test_avg_temperature_good_status(mock_get):
 
     response = client.get("/temperature")
     assert response.status_code == 200
-    assert response.json()["average_temperature"] == pytest.approx(22.5)
+    assert abs(response.json()["average_temperature"] - 22.5) < 0.1
     assert response.json()["status"] == "Good"
-
 
 @patch("src.app.routes.temperature.BOX_ID", ["test_box"])
 @patch("src.app.routes.temperature.requests.get")
@@ -54,9 +49,8 @@ def test_avg_temperature_too_cold_status(mock_get):
 
     response = client.get("/temperature")
     assert response.status_code == 200
-    assert response.json()["average_temperature"] == pytest.approx(5.0)
+    assert abs(response.json()["average_temperature"] - 5.0) < 0.1
     assert response.json()["status"] == "Too Cold"
-
 
 @patch("src.app.routes.temperature.BOX_ID", ["test_box"])
 @patch("src.app.routes.temperature.requests.get")
@@ -78,9 +72,8 @@ def test_avg_temperature_too_hot_status(mock_get):
 
     response = client.get("/temperature")
     assert response.status_code == 200
-    assert response.json()["average_temperature"] == pytest.approx(40.0)
+    assert abs(response.json()["average_temperature"] - 40.0) < 0.1
     assert response.json()["status"] == "Too Hot"
-
 
 @patch("src.app.routes.temperature.BOX_ID", ["test_box"])
 @patch("src.app.routes.temperature.requests.get")
