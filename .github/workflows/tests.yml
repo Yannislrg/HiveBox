@@ -19,11 +19,13 @@ jobs:
           python-version: '3.13'
 
       - name: Install dependencies
-        run: pip install --only-binary :all: -r requirements.txt
+        run: |
+          pip install pipenv
+          pipenv sync
 
       - name: Run tests
         run: |
-          pytest tests/ -q
+          pipenv run pytest tests/ -q
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3

@@ -111,8 +111,7 @@ Les fichiers se trouvent dans k8s/ :
 
 ## Installation Locale
 
-1. Créer un environnement virtuel : `python -m venv .venv`
-2. Activer l'environnement : `source .venv/bin/activate`
-3. Installer les dépendances : `pip install -r requirements.txt`
-4. Lancer l'app : `uvicorn src.app.main:app --reload`
+1. Installer pipenv si nécessaire : `pip install pipenv`
+2. Installer les dépendances : `pipenv install --dev`
+3. Lancer l'app : `pipenv run uvicorn src.app.main:app --reload`
 da

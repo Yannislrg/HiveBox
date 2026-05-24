@@ -18,10 +18,12 @@ jobs:
           python-version: '3.13' 
 
       - name: Install dependencies
-        run: pip install flake8
+        run: |
+          pip install pipenv
+          pipenv sync --dev
       
       - name: Lint with flake8
-        run: flake8 src/
+        run: pipenv run flake8 src/
   
   lint_docker:
     timeout-minutes: 3
@@ -35,13 +37,11 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: ./Dockerfile
-  
-  # Tests have been moved to a dedicated workflow file `.github/workflows/tests.yml`.
-  
+
   build_docker_image:
     timeout-minutes: 3
     runs-on: ubuntu-latest
-    # Keep build dependent on linting; tests run in a separate workflow `tests.yml`.
+
     needs: lint_docker
 
     steps:

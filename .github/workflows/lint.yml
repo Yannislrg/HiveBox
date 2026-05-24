@@ -18,10 +18,12 @@ jobs:
           python-version: '3.13' 
 
       - name: Install dependencies
-        run: pip install --only-binary :all: flake8==7.1.1
+        run: |
+          pip install pipenv
+          pipenv sync --dev
       
       - name: Lint with flake8
-        run: flake8 src/
+        run: pipenv run flake8 src/
   
   lint_docker:
     timeout-minutes: 3
