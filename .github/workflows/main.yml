@@ -13,17 +13,20 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: '3.13' 
+          enable-cache: true
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.13
 
       - name: Install dependencies
-        run: |
-          pip install pipenv
-          pipenv sync --dev
+        run: uv sync --dev
       
       - name: Lint with flake8
-        run: pipenv run flake8 src/
+        run: uv run flake8 src/
   
   lint_docker:
     timeout-minutes: 3

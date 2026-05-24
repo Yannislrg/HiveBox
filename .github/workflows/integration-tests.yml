@@ -46,12 +46,15 @@ jobs:
             sleep 2
           done
 
+          # Install uv
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          source $HOME/.cargo/env
+
           # Install dependencies
-          pip install pipenv
-          pipenv sync
+          uv sync
 
           # Run integration tests
-          pipenv run pytest tests/integration/ -v
+          uv run pytest tests/integration/ -v
 
       - name: Cleanup container
         if: always()

@@ -1,12 +1,13 @@
-FROM python:3.14-slim AS builder
+FROM python:3.13-slim AS builder
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir pipenv
 
-COPY Pipfile Pipfile.lock ./
+ADD https://astral.sh/uv/install.sh /install.sh
+RUN chmod +x /install.sh && /install.sh && rm /install.sh
 
-RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy --ignore-pipfile
+COPY pyproject.toml uv.lock ./
+RUN /root/.local/bin/uv sync --frozen --no-dev
 
 
 FROM python:3.13-slim

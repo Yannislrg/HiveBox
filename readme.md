@@ -111,7 +111,6 @@ Les fichiers se trouvent dans k8s/ :
 
 ## Installation Locale
 
-1. Installer pipenv si nécessaire : `pip install pipenv`
-2. Installer les dépendances : `pipenv install --dev`
-3. Lancer l'app : `pipenv run uvicorn src.app.main:app --reload`
-da
+1. Installer uv si nécessaire : `curl -LsSf https://astral.sh/uv/install.sh | sh`
+2. Installer les dépendances : `uv sync --dev`
+3. Lancer l'app : `uv run uvicorn src.app.main:app --reload`
