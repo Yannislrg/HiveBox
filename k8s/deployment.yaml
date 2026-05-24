@@ -32,11 +32,16 @@ spec:
           type: RuntimeDefault
       containers:
         - name: hivebox-container
-          image: hivebox:local
+          image: hivebox:local@sha256:456c646014467576563603417675736736734123232145678901234567890123
           imagePullPolicy: Never
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
+            privileged: false
+            seccompProfile:
+              type: RuntimeDefault
             capabilities:
               drop:
                 - ALL
