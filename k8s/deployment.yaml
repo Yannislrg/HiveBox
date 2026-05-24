@@ -19,6 +19,8 @@ spec:
     metadata:
       labels:
         app: HiveBox
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/hivebox-container: runtime/default
     spec:
       serviceAccountName: hivebox-sa
       automountServiceAccountToken: false
@@ -26,6 +28,8 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: hivebox-container
           image: hivebox:local
@@ -61,6 +65,12 @@ spec:
               port: 8000
             initialDelaySeconds: 5
             periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /version
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
       volumes:
         - name: tmp
           emptyDir:

@@ -21,4 +21,4 @@ jobs:
           terrascan init
 
       - name: Run Terrascan
-        run: terrascan scan -t k8s -d .
+        run: terrascan scan -t k8s -d k8s/

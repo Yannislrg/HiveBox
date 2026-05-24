@@ -3,10 +3,14 @@ kind: Ingress
 metadata:
   name: hivebox-ingress
   annotations:
-    nginx.ingress.kubernets.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - hivebox.local
+      secretName: hivebox-tls
   rules:
     - host: hivebox.local
       http:
