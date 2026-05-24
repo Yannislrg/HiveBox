@@ -1,13 +1,15 @@
-FROM python:3.13-slim AS builder
+FROM astral-sh/uv:latest AS builder
 
 WORKDIR /app
 
 
-ADD https://astral.sh/uv/install.sh /install.sh
-RUN chmod +x /install.sh && /install.sh && rm /install.sh
+ENV UV_COMPILE_BYTECODE=1
+
 
 COPY pyproject.toml uv.lock ./
-RUN /root/.local/bin/uv sync --frozen --no-dev
+
+
+RUN uv sync --frozen --no-dev
 
 
 FROM python:3.13-slim
