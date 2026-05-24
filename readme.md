@@ -17,6 +17,10 @@ L'application suit les standards modernes de développement Python :
 - **Type Hinting** : Utilisation systématique des types Python pour une meilleure maintenabilité.
 - **Monitoring** : Standards Prometheus via prometheus_client.
 
+### Métriques Métier Personnalisées
+- `hivebox_healthy_boxes_total` (Gauge) : Nombre de senseBoxes actuellement joignables.
+- `hivebox_cache_miss_total` (Counter) : Nombre total de récupérations de données via l'API externe dues à une absence ou expiration du cache.
+
 ## Structure du Projet
 
 ```text

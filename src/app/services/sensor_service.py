@@ -3,6 +3,7 @@ import logging
 import os
 import requests
 from typing import Dict, List, Optional, Tuple
+from src.app.routes.metrics import HEALTHY_BOXES_COUNT, CACHE_MISS_COUNT
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +34,14 @@ class SensorService:
         if reachable > 0:
             self.last_fetch_time = datetime.now(timezone.utc)
 
+        HEALTHY_BOXES_COUNT.set(reachable)
         return reachable, len(BOX_IDS)
 
     def get_data(self) -> Dict[str, dict]:
         """Get latest available data from cache, refreshing if necessary."""
         now = datetime.now(timezone.utc)
         if not self.last_fetch_time or (now - self.last_fetch_time > timedelta(minutes=1)):
+            CACHE_MISS_COUNT.inc()
             self.fetch_all_data()
         return self.cache
 
