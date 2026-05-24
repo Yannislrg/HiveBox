@@ -19,8 +19,6 @@ spec:
     metadata:
       labels:
         app: HiveBox
-      annotations:
-        container.apparmor.security.beta.kubernetes.io/hivebox-container: runtime/default
     spec:
       serviceAccountName: hivebox-sa
       automountServiceAccountToken: false
@@ -41,6 +39,8 @@ spec:
             readOnlyRootFilesystem: true
             privileged: false
             seccompProfile:
+              type: RuntimeDefault
+            appArmorProfile:
               type: RuntimeDefault
             capabilities:
               drop:
