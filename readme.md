@@ -21,14 +21,14 @@ L'application suit les standards modernes de développement Python :
 
 ```text
 hivebox/
-├── .github/workflows/      # Pipelines CI/CD
+├── .github/workflows/
 ├── src/app/
-│   ├── main.py             # Point d'entrée FastAPI
-│   └── routes/             # Endpoints (version, temperature, metrics)
-├── tests/                  # Tests Unitaires et Intégration
-├── k8s/                    # Manifestes Kubernetes (Deployment, Service, Ingress)
-├── Dockerfile              # Containerisation
-└── requirements.txt        # Dépendances Python
+│   ├── main.py
+│   └── routes/
+├── tests/
+├── k8s/
+├── Dockerfile
+└── requirements.txt
 ```
 
 ## Tests & Validation
@@ -37,8 +37,7 @@ La qualité du code est assurée par une suite de tests complète utilisant pyte
 
 ### Exécution des tests
 ```bash
-# Dans le virtual environment
-pytest
+uv run pytest
 ```
 
 - **Tests Unitaires** : Vérifient la logique de calcul, les statuts Prometheus et les formats de réponse.
@@ -73,7 +72,7 @@ docker run -p 8000:8000 \
 ```
 
 ### Registre d'images
-Les images sont automatiquement construites et publiées sur **GitHub Container Registry (GHCR)** lors des push sur la branche principale ou la création de tags :
+Les images sont automatiquement construites et publiées sur GitHub Container Registry (GHCR) lors des push sur la branche principale ou la création de tags :
 `ghcr.io/votre-utilisateur/hivebox:latest`
 
 ## Kubernetes
@@ -87,7 +86,7 @@ L'application est configurée pour être déployée sur un cluster Kubernetes (t
    kind create cluster --config k8s/kind-config.yaml
    ```
 
-2. **Charger l'image locale** (si construite localement) :
+2. **Charger l'image locale** :
    ```bash
    kind load docker-image hivebox:local
    ```

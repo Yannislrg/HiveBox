@@ -31,12 +31,10 @@ jobs:
 
       - name: Run integration tests
         run: |
-          # Start the container in the background
           docker run -d -p 8000:8000 \
             --name hivebox-integration-test \
             "$IMAGE"
           
-          # Wait for the application to be ready
           echo "Waiting for application to be ready..."
           for i in {1..30}; do
             if curl -s http://localhost:8000/version > /dev/null 2>&1; then
@@ -46,14 +44,11 @@ jobs:
             sleep 2
           done
 
-          # Install uv
           curl -LsSf https://astral.sh/uv/install.sh | sh
           source $HOME/.cargo/env
 
-          # Install dependencies
           uv sync
 
-          # Run integration tests
           uv run pytest tests/integration/ -v
 
       - name: Cleanup container
