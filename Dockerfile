@@ -1,13 +1,12 @@
-FROM astral-sh/uv:latest AS builder
+FROM python:3.13-slim AS builder
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uv /usr/bin/
 
 WORKDIR /app
 
-
 ENV UV_COMPILE_BYTECODE=1
 
-
 COPY pyproject.toml uv.lock ./
-
 
 RUN uv sync --frozen --no-dev
 
@@ -21,10 +20,8 @@ RUN useradd -m -u 1000 appuser
 
 WORKDIR /app
 
-
 COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
 COPY --chown=appuser:appuser src/ src/
-
 
 ENV PATH="/app/.venv/bin:$PATH"
 
