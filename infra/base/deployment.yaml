@@ -24,13 +24,13 @@ spec:
             - name: BASE_URL
               value: "https://api.opensensemap.org"
             - name: BOX_ID
-              value: "5eba5fbad46fb8001b799786,5c21ff8f919bf8001adf2488,5ade1acf223bd80019a1011c"
+              value: "5c21ff8f919bf8001adf2488,5ade1acf223bd80019a1011c"
           resources:
             limits:
-              memory: "512Mi"
+              memory: "512M"
               cpu: "500m"
             requests:
-              memory: "256Mi"
+              memory: "256M"
               cpu: "250m"
           readinessProbe:
             httpGet:

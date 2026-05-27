@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace : minio
+
+helmCharts:
+  - name: minio
+    repo: https://charts.bitnami.com/bitnami
+    version: 12.8.0
+    releaseName: minio-infra
+    valuesInline:
+      mode: "standalone"
+      auth:
+        rootUser: "minioadmin"
+        rootPassword: "minioadmin"
+
