@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hivebox.fullname" . }}
+  labels:
+    app: HiveBox
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: HiveBox
+  template:
+    metadata:
+      labels:
+        app: HiveBox
+    spec:
+      containers:
+        - name: hivebox-container
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8000
+          env:
+            - name: BASE_URL
+              value: {{ .Values.env.baseUrl | quote }}
+            - name: BOX_ID
+              value: {{ .Values.env.boxId | quote }}
+            - name: VALKEY_HOST
+              value: {{ .Values.env.valkeyHost | quote }}
+            - name: MINIO_ENDPOINT
+              value: {{ .Values.env.minioEndpoint | quote }}
+          resources:
+            limits:
+              memory: "512M"
+              cpu: "500m"
+            requests:
+              memory: "256M"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /version
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
