@@ -29,6 +29,12 @@ spec:
               value: {{ .Values.env.valkeyHost | quote }}
             - name: MINIO_ENDPOINT
               value: {{ .Values.env.minioEndpoint | quote }}
+            - name: MINIO_ACCESS_KEY
+              value: {{ .Values.env.minioAccessKey | quote }}
+            - name: MINIO_SECRET_KEY
+              value: {{ .Values.env.minioSecretKey | quote }}
+            - name: MINIO_BUCKET
+              value: {{ .Values.env.minioBucket | quote }}
           resources:
             limits:
               memory: "512M"

@@ -25,6 +25,14 @@ spec:
               value: "https://api.opensensemap.org"
             - name: BOX_ID
               value: "5c21ff8f919bf8001adf2488,5ade1acf223bd80019a1011c"
+            - name: MINIO_ENDPOINT
+              value: "http://minio-infra.minio.svc.cluster.local:9000"
+            - name: MINIO_ACCESS_KEY
+              value: "minioadmin"
+            - name: MINIO_SECRET_KEY
+              value: "minioadmin"
+            - name: MINIO_BUCKET
+              value: "hivebox-data"
           resources:
             limits:
               memory: "512M"
