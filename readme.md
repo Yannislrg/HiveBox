@@ -5,9 +5,11 @@ HiveBox est une application FastAPI conçue pour agréger et surveiller les donn
 ## Fonctionnalités
 
 - **Agrégation de Température** : Calcule la moyenne des températures de plusieurs boîtiers configurés.
-- **Monitoring Prometheus** : Expose des métriques détaillées (requêtes, températures actuelles, statuts).
-- **Health Checks** : Endpoints dédiés pour vérifier la version et la santé de l'application.
-- **Cloud Native** : Prête pour Kubernetes avec configuration Ingress et sondes de disponibilité.
+- **Cache Multi-niveaux** : Intégration de Valkey (Redis-compatible) pour réduire les appels API, avec un fallback automatique sur un cache mémoire.
+- **Stockage Persistant** : Sauvegarde périodique des données sur un stockage compatible S3 (Minio).
+- **Monitoring Prometheus** : Expose des métriques détaillées (requêtes, températures actuelles, statuts, hits/miss de cache).
+- **Health Checks** : Endpoints dédiés pour vérifier la version et la santé de l'application (incluant la validation du cache).
+- **Cloud Native** : Prête pour Kubernetes avec configuration Ingress, sondes de disponibilité et gestion de l'infrastructure via Kustomize/Helm.
 
 ## Architecture & Normes
 
@@ -69,6 +71,57 @@ graph TD
     style OSM_API fill:#fff4dd,stroke:#d4a017
     style Valkey fill:#e1f5fe,stroke:#01579b
     style Minio fill:#e8f5e9,stroke:#2e7d32
+```
+
+## Architecture de Déploiement (Kubernetes)
+
+```mermaid
+graph TB
+    subgraph Internet [Internet / External]
+        OSM[openSenseMap API]
+        Users[Users / Monitoring]
+    end
+
+    subgraph Kubernetes_Cluster [K8s Cluster / KIND]
+        subgraph Ingress_Layer [Ingress Layer]
+            Ingress[NGINX Ingress Controller]
+        end
+
+        subgraph App_Namespace [Namespace: Default]
+            HiveBox[HiveBox Pods]
+            HB_Svc[Service: hivebox]
+        end
+
+        subgraph Cache_Namespace [Namespace: Valkey]
+            Valkey_Master[Valkey Master]
+            V_Svc[Service: valkey-infra-master]
+        end
+
+        subgraph Storage_Namespace [Namespace: Minio]
+            Minio_Pod[Minio Pod]
+            M_Svc[Service: minio-infra]
+        end
+
+        %% Connections
+        Users --> Ingress
+        Ingress --> HB_Svc
+        HB_Svc --> HiveBox
+
+        HiveBox -- Caching --> V_Svc
+        V_Svc --> Valkey_Master
+
+        HiveBox -- Persistence --> M_Svc
+        M_Svc --> Minio_Pod
+
+        HiveBox -- Fetch Data --> OSM
+    end
+
+    %% Styling
+    style HiveBox fill:#f9f,stroke:#333,stroke-width:2px
+    style Valkey_Master fill:#e1f5fe,stroke:#01579b
+    style Minio_Pod fill:#e8f5e9,stroke:#2e7d32
+    style Ingress fill:#fff3e0,stroke:#ff9800
+```
 ```
 
 ## Structure du Projet
@@ -159,14 +212,59 @@ Les fichiers se trouvent dans k8s/ :
 - `service.yaml` : Expose l'application en interne.
 - `ingress.yaml` : Permet l'accès externe via un contrôleur Ingress.
 
-### Variables d'Environnement Clés
-- `BASE_URL` : URL de l'API OpenSenseMap.
-- `BOX_ID` : Liste des IDs de boîtiers séparés par des virgules.
+## Guide de Démarrage (Développement)
 
-## Installation Locale
+### 1. Prérequis
+- [Python 3.13+](https://www.python.org/)
+- [uv](https://astral.sh/uv/) (Gestionnaire de paquets ultra-rapide)
+- [Docker](https://www.docker.com/) & [KIND](https://kind.sigs.k8s.io/) (pour l'infrastructure locale)
 
-1. Installer uv si nécessaire : `curl -LsSf https://astral.sh/uv/install.sh | sh`
-2. Installer les dépendances : `uv sync --dev`
-3. Lancer l'app : `uv run uvicorn src.app.main:app --reload tps://astral.sh/uv/install.sh | sh`
-2. Installer les dépendances : `uv sync --dev`
-3. Lancer l'app : `uv run uvicorn src.app.main:app --reload`
+### 2. Installation Locale
+
+```bash
+# Cloner le dépôt
+git clone <url-du-repo>
+cd hivebox
+
+# Installer les dépendances
+uv sync --dev
+```
+
+### 3. Configuration de l'Environnement (.env)
+Créez un fichier `.env` à la racine pour le développement local :
+```env
+BASE_URL=https://api.opensensemap.org
+BOX_ID=5c21ff8f919bf8001adf2488,5ade1acf223bd80019a1011c
+VALKEY_HOST=localhost
+VALKEY_PORT=6379
+VALKEY_TTL=300
+MINIO_ENDPOINT=localhost:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_BUCKET=hivebox-data
+```
+
+### 4. Lancer l'Infrastructure (via KIND)
+Pour tester l'application avec ses dépendances réelles (Valkey, Minio) :
+```bash
+# Créer le cluster KIND
+kind create cluster --config k8s/kind-config.yaml
+
+# Déployer l'infrastructure (Valkey + Minio)
+kubectl apply -k infra/base
+```
+
+### 5. Exécution de l'Application
+```bash
+# Lancer en mode développement avec rechargement automatique
+uv run uvicorn src.app.main:app --reload
+```
+
+### 6. Tests & Qualité
+```bash
+# Lancer tous les tests (unitaires + intégration)
+uv run pytest
+
+# Vérifier le style du code
+uv run flake8 src/
+```
