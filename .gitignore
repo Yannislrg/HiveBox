@@ -1,3 +1,4 @@
 *.pyc
 .env
 infra/*/*/*/charts/
+.gemini/settings.json
