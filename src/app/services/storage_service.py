@@ -21,6 +21,7 @@ class StorageService:
 
     @property
     def s3(self):
+        """Initialize the S3 client."""
         if self._s3 is None:
             self._s3 = boto3.client(
                 's3',
@@ -54,7 +55,7 @@ class StorageService:
         self._ensure_bucket_exists()
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         filename = f"sensor_data_{timestamp}.json"
-        
+
         try:
             self.s3.put_object(
                 Bucket=MINIO_BUCKET,
