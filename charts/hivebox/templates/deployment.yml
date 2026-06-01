@@ -27,6 +27,10 @@ spec:
               value: {{ .Values.env.boxId | quote }}
             - name: VALKEY_HOST
               value: {{ .Values.env.valkeyHost | quote }}
+            - name: VALKEY_PORT
+              value: {{ .Values.env.valkeyPort | quote }}
+            - name: VALKEY_TTL
+              value: {{ .Values.env.valkeyTtl | quote }}
             - name: MINIO_ENDPOINT
               value: {{ .Values.env.minioEndpoint | quote }}
             - name: MINIO_ACCESS_KEY
