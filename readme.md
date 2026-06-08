@@ -145,11 +145,16 @@ La qualité du code est assurée par une suite de tests complète utilisant pyte
 
 ### Exécution des tests
 ```bash
+# Lancer tous les tests (unitaires + intégration)
 uv run pytest
+
+# Lancer les tests E2E avec Venom (nécessite une instance qui tourne)
+venom run tests/e2e/hivebox.yml --var base_url=http://localhost:8000
 ```
 
 - **Tests Unitaires** : Vérifient la logique de calcul, les statuts Prometheus et les formats de réponse.
 - **Tests d'Intégration** : Utilisent TestClient pour valider les interactions entre les composants sans dépendances externes complexes.
+- **Tests E2E (Venom)** : Valident le cycle de vie complet de l'application déployée sur Kubernetes, incluant les interactions réelles avec Valkey et MinIO.
 - **Linting** : flake8 est utilisé pour garantir la propreté du code.
 
 ## CI/CD (GitHub Actions)
@@ -161,6 +166,23 @@ Plusieurs workflows sont en place pour assurer la stabilité du projet :
 - **SonarQube** : Analyse de la qualité du code et respect des normes de sécurité associées.
 - **Scorecard** : Analyse de sécurité OpenSSF.
 - **Terrascan** : Scan de sécurité des fichiers d'infrastructure.
+
+## Pratiques DevOps & CD (Best Practices)
+
+Le projet intègre les meilleures pratiques de l'industrie pour garantir une livraison continue (CD) robuste et sécurisée :
+
+- **Immuabilité des Artefacts** : Les images Docker sont construites une seule fois et taguées de manière unique (SHA du commit, Tags Git). Ces mêmes images sont utilisées pour toutes les étapes de validation (tests d'intégration, smoke tests).
+- **Pipeline de Validation Multi-niveaux** :
+  - **Linting** : Vérification rigoureuse du style de code (`flake8`) et de la conformité du Dockerfile (`hadolint`).
+  - **Tests Automatisés** : Exécution de tests unitaires et d'intégration via `pytest` à chaque changement.
+  - **Smoke Tests** : Validation post-build du démarrage effectif du conteneur et du endpoint `/version`.
+- **Sécurité DevSecOps** :
+  - **Analyse Statique (SAST)** : Utilisation de SonarQube pour identifier les vulnérabilités et la dette technique.
+  - **Supply Chain Security** : Intégration de **OpenSSF Scorecard** pour surveiller la sécurité du dépôt et des dépendances.
+  - **Infrastructure Security** : Scan des manifestes Kubernetes via **Terrascan** pour détecter les erreurs de configuration.
+- **Gestion des Dépendances** : Utilisation de `uv` pour garantir des environnements de build reproductibles et ultra-rapides via `uv.lock`.
+- **Infrastructure as Code (IaC)** : Définition de l'infrastructure via Kustomize et Helm, permettant un déploiement versionné et auditable.
+- **Observabilité & Santé** : Implémentation native de métriques Prometheus et de health checks avancés (Sondes K8s).
 
 ## Docker
 

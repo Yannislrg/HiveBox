@@ -1,0 +1,93 @@
+name: E2E Tests (Venom)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+
+      - name: Create KIND Cluster
+        uses: helm/kind-action@v1.12.0
+        with:
+          config: k8s/kind-config.yaml
+          cluster_name: hivebox-e2e
+
+      - name: Build and Load Docker Image
+        run: |
+          docker build -t hivebox:local .
+          kind load docker-image hivebox:local --name hivebox-e2e
+
+      - name: Install Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Deploy Infrastructure (Valkey, Minio)
+        run: |
+          kustomize build --enable-helm infra/base | kubectl apply -f -
+          echo "Waiting for Namespaces..."
+          kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/valkey namespace/minio --timeout=60s
+          
+          echo "Waiting for Infrastructure Pods..."
+          # Wait for pods to be created before waiting for readiness
+          sleep 10
+          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=redis -n valkey --timeout=180s
+          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=minio -n minio --timeout=180s
+
+      - name: Deploy HiveBox
+        run: |
+          # Patch deployment to use local image
+          sed -i 's|image: ghcr.io/yannislrg/hivebox:latest|image: hivebox:local|' k8s/deployment.yaml
+          sed -i 's|imagePullPolicy: Always|imagePullPolicy: IfNotPresent|' k8s/deployment.yaml
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+          
+          echo "Waiting for HiveBox to be ready..."
+          kubectl wait --for=condition=available deployment/hivebox-deployment --timeout=120s
+
+      - name: Install Venom
+        run: |
+          curl -L https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -o venom
+          chmod +x venom
+          sudo mv venom /usr/local/bin/
+
+      - name: Run E2E Tests
+        run: |
+          # Port-forward in background
+          kubectl port-forward service/hivebox-service 8080:80 &
+          PF_PID=$!
+          
+          # Wait for port-forward to be active
+          echo "Waiting for port-forward..."
+          for i in {1..10}; do
+            if curl -s http://localhost:8080/version > /dev/null 2>&1; then
+              echo "Port-forward is active!"
+              break
+            fi
+            sleep 2
+          done
+          
+          # Run venom
+          venom run tests/e2e/hivebox.yml --var base_url=http://localhost:8080
+          
+          # Kill port-forward
+          kill $PF_PID
+
+      - name: Debug on Failure
+        if: failure()
+        run: |
+          kubectl get all -A
+          kubectl logs -l app=HiveBox
+          kubectl describe pod -l app=HiveBox
+          kubectl logs -n valkey -l app.kubernetes.io/name=redis
+          kubectl logs -n minio -l app.kubernetes.io/name=minio
+
+      - name: Cleanup Cluster
+        if: always()
+        run: |
+          kind delete cluster --name hivebox-e2e
