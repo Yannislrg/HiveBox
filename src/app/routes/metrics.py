@@ -62,6 +62,18 @@ METRICS_ENDPOINT_REQUESTS = Counter(
     "Total requests to metrics endpoint",
 )
 
+# Gauge: count of healthy senseBoxes
+HEALTHY_BOXES_COUNT = Gauge(
+    "hivebox_healthy_boxes_total",
+    "Number of senseBoxes currently reachable",
+)
+
+# Counter: total cache misses
+CACHE_MISS_COUNT = Counter(
+    "hivebox_cache_miss_total",
+    "Total number of times data was fetched from external API due to cache miss or expiry",
+)
+
 
 @router.get("/metrics")
 def get_metrics():

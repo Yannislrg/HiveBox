@@ -30,6 +30,8 @@ def test_metrics_endpoint_returns_prometheus_format(client):
     assert "hivebox_temperature_readings_total" in content
     assert "hivebox_temperature_endpoint_requests_total" in content
     assert "hivebox_metrics_endpoint_requests_total" in content
+    assert "hivebox_healthy_boxes_total" in content
+    assert "hivebox_cache_miss_total" in content
 
 
 def test_metrics_endpoint_content_type(client):
@@ -76,6 +78,8 @@ def test_metrics_endpoint_includes_all_metrics(client):
     assert "hivebox_temperature_readings_total" in content
     assert "hivebox_temperature_endpoint_requests_total" in content
     assert "hivebox_metrics_endpoint_requests_total" in content
+    assert "hivebox_healthy_boxes_total" in content
+    assert "hivebox_cache_miss_total" in content
 
     # Check for metric types
     assert "# HELP" in content

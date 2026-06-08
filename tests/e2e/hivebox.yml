@@ -1,0 +1,47 @@
+name: HiveBox E2E Tests
+testcases:
+- name: Check Version
+  steps:
+  - type: http
+    method: GET
+    url: "{{.base_url}}/version"
+    assertions:
+    - result.statuscode ShouldEqual 200
+    - result.bodyjson.version ShouldStartWith "v"
+
+- name: Check Temperature
+  steps:
+  - type: http
+    method: GET
+    url: "{{.base_url}}/temperature"
+    assertions:
+    - result.statuscode ShouldEqual 200
+    - result.bodyjson.average_temperature ShouldBeType float64
+    - result.bodyjson.status ShouldBeIn ["Too Cold", "Good", "Too Hot"]
+
+- name: Check Readiness
+  steps:
+  - type: http
+    method: GET
+    url: "{{.base_url}}/readyz"
+    assertions:
+    - result.statuscode ShouldEqual 200
+
+- name: Check Metrics
+  steps:
+  - type: http
+    method: GET
+    url: "{{.base_url}}/metrics"
+    assertions:
+    - result.statuscode ShouldEqual 200
+    - result.body ShouldContain "hivebox_"
+
+- name: Trigger Manual Storage
+  steps:
+  - type: http
+    method: POST
+    url: "{{.base_url}}/store"
+    assertions:
+    - result.statuscode ShouldEqual 200
+    - result.bodyjson.message ShouldEqual "Data stored successfully"
+    - result.bodyjson.filename ShouldContain ".json"
