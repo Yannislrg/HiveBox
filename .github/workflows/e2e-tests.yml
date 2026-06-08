@@ -55,6 +55,7 @@ jobs:
       - name: Install Venom
         run: |
           curl -L https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -o venom
+          echo "f4c4670bb543f888a1c99168f7ea1a40d2cf0e703e2a8c740c53e883b8be522d  venom" | sha256sum -c -
           chmod +x venom
           sudo mv venom /usr/local/bin/
 

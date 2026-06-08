@@ -23,9 +23,7 @@ class SensorService:
     def __init__(self):
         self.cache: Dict[str, dict] = {}
         self.last_fetch_time: Optional[datetime] = None
-        self.box_statuses: Dict[str, bool] = {
-            box_id: True for box_id in BOX_IDS
-        }
+        self.box_statuses: Dict[str, bool] = dict.fromkeys(BOX_IDS, True)
 
     def fetch_all_data(self) -> Tuple[int, int]:
         """Fetch data for all boxes and update cache/statuses."""

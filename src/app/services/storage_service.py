@@ -17,6 +17,7 @@ MINIO_ENDPOINT = os.getenv(
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
 MINIO_BUCKET = os.getenv("MINIO_BUCKET", "hivebox-data")
+MINIO_REGION = os.getenv("MINIO_REGION", "us-east-1")
 
 
 class StorageService:
@@ -36,7 +37,7 @@ class StorageService:
                 aws_access_key_id=MINIO_ACCESS_KEY,
                 aws_secret_access_key=MINIO_SECRET_KEY,
                 config=Config(signature_version="s3v4"),
-                region_name="us-east-1",
+                region_name=MINIO_REGION,
             )
         return self._s3
 
@@ -74,8 +75,8 @@ class StorageService:
             )
             logger.info("Successfully stored data in %s", filename)
             return filename
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.error("Failed to store data in MinIO: %s", e)
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Failed to store data in MinIO")
             raise
 
 

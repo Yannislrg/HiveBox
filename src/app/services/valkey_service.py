@@ -36,10 +36,9 @@ class ValkeyService:
             )
             self.client.ping()
             logger.info("Connected to Valkey at %s:%s", self.host, self.port)
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.error(
-                "Failed to connect to Valkey at %s:%s: %s",
-                self.host, self.port, e,
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception(
+                "Failed to connect to Valkey at %s:%s", self.host, self.port
             )
             self.client = None
 

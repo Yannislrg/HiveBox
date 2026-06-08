@@ -14,6 +14,7 @@ spec:
       labels:
         app: HiveBox
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: hivebox-container
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
@@ -43,9 +44,11 @@ spec:
             limits:
               memory: "512M"
               cpu: "500m"
+              ephemeral-storage: "256M"
             requests:
               memory: "256M"
               cpu: "250m"
+              ephemeral-storage: "128M"
           livenessProbe:
             httpGet:
               path: /version

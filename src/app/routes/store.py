@@ -11,7 +11,13 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.post("/store")
+@router.post(
+    "/store",
+    responses={
+        404: {"description": "No sensor data available to store"},
+        500: {"description": "Internal storage error"},
+    },
+)
 def store_sensor_data():
     """Trigger manual storage of sensor data to MinIO."""
     try:
@@ -26,5 +32,5 @@ def store_sensor_data():
     except HTTPException:
         raise
     except Exception as e:  # pylint: disable=broad-exception-caught
-        logger.error("Manual storage failed: %s", e)
+        logger.exception("Manual storage failed")
         raise HTTPException(status_code=500, detail=str(e)) from e

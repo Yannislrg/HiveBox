@@ -28,8 +28,8 @@ async def periodic_storage():
                 logger.info("Periodic storage successful")
             else:
                 logger.warning("No data available for periodic storage")
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.error("Periodic storage task failed: %s", e)
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Periodic storage task failed")
 
         await asyncio.sleep(300)
 
@@ -44,6 +44,7 @@ async def lifespan(_: FastAPI):
         await storage_task
     except asyncio.CancelledError:
         logger.info("Periodic storage task cancelled")
+        raise
 
 
 app = FastAPI(title="HiveBox", lifespan=lifespan)

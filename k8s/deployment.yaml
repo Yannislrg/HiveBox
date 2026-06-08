@@ -15,7 +15,9 @@ spec:
         app: HiveBox
       annotations:
         container.apparmor.security.beta.kubernetes.io/hivebox-container: runtime/default
+        seccomp.security.alpha.kubernetes.io/pod: runtime/default
     spec:
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -61,9 +63,11 @@ spec:
             requests:
               cpu: 100m
               memory: 128Mi
+              ephemeral-storage: 128Mi
             limits:
               cpu: 200m
               memory: 256Mi
+              ephemeral-storage: 256Mi
           livenessProbe:
             httpGet:
               path: /version

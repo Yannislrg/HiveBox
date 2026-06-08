@@ -67,7 +67,10 @@ def accumulate_temperature(data, box_id):
     return temperature, box_active
 
 
-@router.get("/temperature")
+@router.get(
+    "/temperature",
+    responses={503: {"description": "No active boxes with valid temperature data"}},  # noqa: E501
+)
 def get_avg_temperature():
     """Return average temperature value across all active senseBoxes."""
     logger.info("Temperature endpoint requested")
