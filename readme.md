@@ -122,7 +122,6 @@ graph TB
     style Minio_Pod fill:#e8f5e9,stroke:#2e7d32
     style Ingress fill:#fff3e0,stroke:#ff9800
 ```
-```
 
 ## Structure du Projet
 
@@ -160,12 +159,13 @@ venom run tests/e2e/hivebox.yml --var base_url=http://localhost:8000
 ## CI/CD (GitHub Actions)
 
 Plusieurs workflows sont en place pour assurer la stabilité du projet :
-- **Lint** : Vérifie le style du code Python et du Dockerfile.
-- **Tests** : Exécute la suite pytest sur chaque PR.
-- **Build** : Valide la création de l'image Docker.
+- **Lint** : Vérifie le style du code Python (`flake8`, `pylint ≥ 8/10`) et du Dockerfile (`hadolint`). Les dépendances sont installées avec `uv sync --frozen` pour garantir la reproductibilité.
+- **Tests** : Exécute la suite pytest sur chaque PR (dépendances verrouillées via `uv.lock`).
+- **Build** : Valide la création de l'image Docker et, à chaque push sur `main`, publie l'image sur GHCR puis **épingle automatiquement le digest SHA256** dans `k8s/deployment.yaml` via un commit automatique.
+- **E2E** : Déploie un cluster KIND, applique l'infrastructure Kustomize/Helm, puis exécute les tests Venom. Le binaire Venom est vérifié par checksum SHA256 avant exécution.
 - **SonarQube** : Analyse de la qualité du code et respect des normes de sécurité associées.
-- **Scorecard** : Analyse de sécurité OpenSSF.
-- **Terrascan** : Scan de sécurité des fichiers d'infrastructure.
+- **Scorecard** : Analyse de sécurité OpenSSF (permissions minimales par workflow).
+- **Terrascan** : Scan de sécurité des fichiers d'infrastructure Kubernetes.
 
 ## Pratiques DevOps & CD (Best Practices)
 
@@ -178,9 +178,11 @@ Le projet intègre les meilleures pratiques de l'industrie pour garantir une liv
   - **Smoke Tests** : Validation post-build du démarrage effectif du conteneur et du endpoint `/version`.
 - **Sécurité DevSecOps** :
   - **Analyse Statique (SAST)** : Utilisation de SonarQube pour identifier les vulnérabilités et la dette technique.
-  - **Supply Chain Security** : Intégration de **OpenSSF Scorecard** pour surveiller la sécurité du dépôt et des dépendances.
+  - **Supply Chain Security** : Intégration de **OpenSSF Scorecard** pour surveiller la sécurité du dépôt et des dépendances. Vérification des artefacts téléchargés par checksum SHA256 avant exécution.
   - **Infrastructure Security** : Scan des manifestes Kubernetes via **Terrascan** pour détecter les erreurs de configuration.
-- **Gestion des Dépendances** : Utilisation de `uv` pour garantir des environnements de build reproductibles et ultra-rapides via `uv.lock`.
+  - **Hardening Kubernetes** : Contextes de sécurité stricts sur tous les pods (no-root, no-privilege-escalation, readOnlyRootFilesystem, seccomp RuntimeDefault, AppArmor, capabilities drop ALL, automountServiceAccountToken désactivé).
+  - **Intégrité des Images** : Le digest SHA256 de chaque image est épinglé automatiquement dans `k8s/deployment.yaml` après chaque build CI, éliminant le risque de substitution d'image.
+- **Gestion des Dépendances** : Utilisation de `uv` avec `--frozen` pour garantir des environnements de build strictement reproductibles via `uv.lock`.
 - **Infrastructure as Code (IaC)** : Définition de l'infrastructure via Kustomize et Helm, permettant un déploiement versionné et auditable.
 - **Observabilité & Santé** : Implémentation native de métriques Prometheus et de health checks avancés (Sondes K8s).
 
@@ -203,7 +205,10 @@ docker run -p 8000:8000 \
 
 ### Registre d'images
 Les images sont automatiquement construites et publiées sur GitHub Container Registry (GHCR) lors des push sur la branche principale ou la création de tags :
-`ghcr.io/votre-utilisateur/hivebox:latest`
+```
+ghcr.io/yannislrg/hivebox:<version>          # tag sémantique ou sha-<commit>
+ghcr.io/yannislrg/hivebox@sha256:<digest>    # épinglé automatiquement dans k8s/deployment.yaml
+```
 
 ## Kubernetes
 
@@ -229,10 +234,12 @@ L'application est configurée pour être déployée sur un cluster Kubernetes (t
    ```
 
 ### Configuration
-Les fichiers se trouvent dans k8s/ :
-- `deployment.yaml` : Gère les réplicas, les ressources (CPU/RAM) et les variables d'environnement (BASE_URL, BOX_ID).
+Les fichiers se trouvent dans `k8s/` :
+- `deployment.yaml` : Gère les réplicas, les ressources (CPU/RAM/ephemeral-storage), les variables d'environnement et les contextes de sécurité stricts. Le digest de l'image est épinglé automatiquement par la CI.
 - `service.yaml` : Expose l'application en interne.
-- `ingress.yaml` : Permet l'accès externe via un contrôleur Ingress.
+- `ingress.yaml` : Accès externe via NGINX avec TLS obligatoire (`ssl-redirect: "true"`).
+
+L'infrastructure (Valkey, Minio) est définie dans `infra/base/` sous forme de releases Helm gérées par Kustomize (`kustomize build --enable-helm`).
 
 ## Guide de Démarrage (Développement)
 
@@ -272,8 +279,12 @@ Pour tester l'application avec ses dépendances réelles (Valkey, Minio) :
 # Créer le cluster KIND
 kind create cluster --config k8s/kind-config.yaml
 
-# Déployer l'infrastructure (Valkey + Minio)
-kubectl apply -k infra/base
+# Créer les namespaces en premier
+kubectl apply -f infra/base/apps/minio/namespace.yaml
+kubectl apply -f infra/base/apps/valkey/namespace.yaml
+
+# Déployer l'infrastructure (Valkey + Minio) via Kustomize + Helm
+kustomize build --enable-helm infra/base | kubectl apply -f -
 ```
 
 ### 5. Exécution de l'Application
