@@ -27,6 +27,9 @@ jobs:
       
       - name: Lint with flake8
         run: uv run flake8 src/
+
+      - name: Lint with pylint
+        run: PYTHONPATH=. uv run pylint src/ --fail-under=8
   
   lint_docker:
     timeout-minutes: 3
