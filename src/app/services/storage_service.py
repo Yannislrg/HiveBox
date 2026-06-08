@@ -11,7 +11,9 @@ from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 
-MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "http://minio-infra.minio.svc.cluster.local:9000")
+MINIO_ENDPOINT = os.getenv(
+    "MINIO_ENDPOINT", "http://minio-infra.minio.svc.cluster.local:9000"
+)
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
 MINIO_BUCKET = os.getenv("MINIO_BUCKET", "hivebox-data")
@@ -48,7 +50,9 @@ class StorageService:
         except ClientError as e:
             error_code = e.response["Error"]["Code"]
             if error_code == "404":
-                logger.info("Bucket %s does not exist. Creating it.", MINIO_BUCKET)
+                logger.info(
+                    "Bucket %s does not exist. Creating it.", MINIO_BUCKET
+                )
                 self.s3.create_bucket(Bucket=MINIO_BUCKET)
                 self._bucket_checked = True
             else:

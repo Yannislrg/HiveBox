@@ -17,7 +17,9 @@ def store_sensor_data():
     try:
         data = sensor_service.get_data()
         if not data:
-            raise HTTPException(status_code=404, detail="No sensor data available to store")
+            raise HTTPException(
+                status_code=404, detail="No sensor data available to store"
+            )
 
         filename = storage_service.store_data(data)
         return {"message": "Data stored successfully", "filename": filename}

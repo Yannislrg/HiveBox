@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class ValkeyService:
-    """Service to handle connection and operations with Valkey (Redis compatible)."""
+    """Connection and operations with Valkey (Redis-compatible)."""
 
     def __init__(self):
         self.host = os.getenv("VALKEY_HOST", "localhost")
@@ -37,7 +37,10 @@ class ValkeyService:
             self.client.ping()
             logger.info("Connected to Valkey at %s:%s", self.host, self.port)
         except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.error("Failed to connect to Valkey at %s:%s: %s", self.host, self.port, e)
+            logger.error(
+                "Failed to connect to Valkey at %s:%s: %s",
+                self.host, self.port, e,
+            )
             self.client = None
 
     def get(self, key: str) -> Optional[Any]:

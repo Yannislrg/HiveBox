@@ -16,8 +16,14 @@ def readiness_check():
     if sensor_service.is_healthy():
         return Response(status_code=status.HTTP_200_OK)
 
-    logger.error("Readiness probe failed: majority of boxes unreachable and cache is stale")
+    logger.error(
+        "Readiness probe failed: majority of boxes unreachable"
+        " and cache is stale"
+    )
+    msg = (
+        "Service Unhealthy: majority of sensors unreachable and cache expired"
+    )
     return Response(
-        content="Service Unhealthy: mayoría de sensores inalcanzables y caché expirada",
+        content=msg,
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
     )
