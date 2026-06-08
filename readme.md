@@ -209,30 +209,62 @@ Les images sont automatiquement construites et publiées sur GitHub Container Re
 
 L'application est configurée pour être déployée sur un cluster Kubernetes (testé avec KIND).
 
-### Déploiement local avec KIND
+### Procédure de Déploiement Complet
 
-1. **Créer le cluster** :
-   ```bash
-   kind create cluster --config k8s/kind-config.yaml
-   ```
+Suivez ces étapes pour déployer l'intégralité de la stack (Infrastructure + Application) sur un cluster local.
 
-2. **Charger l'image locale** :
-   ```bash
-   kind load docker-image hivebox:local
-   ```
+#### 1. Création du Cluster KIND
+```bash
+kind create cluster --config k8s/kind-config.yaml
+```
 
-3. **Appliquer les manifestes** :
-   ```bash
-   kubectl apply -f k8s/deployment.yaml
-   kubectl apply -f k8s/service.yaml
-   kubectl apply -f k8s/ingress.yaml
-   ```
+#### 2. Déploiement de l'Infrastructure (Valkey & MinIO)
+Utilise Kustomize avec le support Helm pour installer les dépendances :
+```bash
+kustomize build --enable-helm infra/base | kubectl apply -f -
 
-### Configuration
+# Attendre que les pods soient prêts
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=redis -n valkey --timeout=120s
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=minio -n minio --timeout=120s
+```
+
+#### 3. Configuration des Secrets
+Créez votre fichier de secrets à partir de l'exemple (ce fichier est ignoré par Git) :
+```bash
+cp k8s/secret.yaml.example k8s/secret.yaml
+# Modifiez k8s/secret.yaml avec vos vraies valeurs si nécessaire
+kubectl apply -f k8s/secret.yaml
+```
+
+#### 4. Déploiement de HiveBox
+Chargez l'image locale dans KIND ou utilisez l'image du registre :
+```bash
+# Optionnel : Charger une image construite localement
+docker build -t hivebox:local .
+kind load docker-image hivebox:local
+
+# Appliquer les manifestes
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/ingress.yaml
+
+# Attendre que l'application soit disponible
+kubectl wait --for=condition=available deployment/hivebox-deployment --timeout=120s
+```
+
+#### 5. Accès à l'Application
+L'application est accessible via l'Ingress (nécessite une configuration `/etc/hosts` pour `hivebox.local`) ou via port-forward :
+```bash
+kubectl port-forward service/hivebox-service 8000:80
+```
+Accédez ensuite à : `http://localhost:8000/temperature`
+
+### Configuration Kubernetes
 Les fichiers se trouvent dans k8s/ :
-- `deployment.yaml` : Gère les réplicas, les ressources (CPU/RAM) et les variables d'environnement (BASE_URL, BOX_ID).
+- `deployment.yaml` : Gère les réplicas, les ressources (CPU/RAM), la sécurité (non-root, read-only) et les variables d'environnement.
+- `secret.yaml` : Gère les identifiants sensibles (MinIO).
 - `service.yaml` : Expose l'application en interne.
-- `ingress.yaml` : Permet l'accès externe via un contrôleur Ingress.
+- `ingress.yaml` : Permet l'accès externe via `hivebox.local`.
 
 ## Guide de Démarrage (Développement)
 
