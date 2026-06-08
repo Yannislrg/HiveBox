@@ -24,7 +24,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: hivebox-container
-          image: ghcr.io/yannislrg/hivebox:latest
+          image: ghcr.io/yannislrg/hivebox:0.1.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
@@ -33,6 +33,8 @@ spec:
             readOnlyRootFilesystem: true
             runAsNonRoot: true
             runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
             capabilities:
               drop:
                 - ALL
