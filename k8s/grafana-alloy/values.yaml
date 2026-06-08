@@ -1,0 +1,89 @@
+alloy:
+  configMap:
+    create: true
+    content: |
+      prometheus.scrape "hivebox" {
+        targets = [{ "__address__" = "hivebox-service.default.svc.cluster.local:80" }]
+        forward_to = [prometheus.remote_write.grafana_cloud.receiver]
+        scrape_interval = "30s"
+        metrics_path = "/metrics"
+      }
+
+      prometheus.remote_write "grafana_cloud" {
+        endpoint {
+          url = env("PROMETHEUS_URL")
+          basic_auth {
+            username = env("PROMETHEUS_USER")
+            password = env("API_KEY")
+          }
+        }
+      }
+
+      discovery.kubernetes "pods" {
+        role = "pod"
+      }
+
+      discovery.relabel "pods" {
+        targets = discovery.kubernetes.pods.targets
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+          separator     = "/"
+          target_label  = "__path__"
+          replacement   = "/var/log/pods/*$1*/$2/*.log"
+        }
+      }
+
+      loki.source.kubernetes_events "cluster_events" {
+        job_name   = "kubernetes-events"
+        log_format = "logfmt"
+        forward_to = [loki.write.grafana_cloud.receiver]
+      }
+
+      loki.write "grafana_cloud" {
+        endpoint {
+          url = env("LOKI_URL")
+          basic_auth {
+            username = env("LOKI_USER")
+            password = env("API_KEY")
+          }
+        }
+      }
+
+  extraEnv:
+    - name: PROMETHEUS_URL
+      valueFrom:
+        secretKeyRef:
+          name: grafana-cloud-credentials
+          key: prometheus-url
+    - name: PROMETHEUS_USER
+      valueFrom:
+        secretKeyRef:
+          name: grafana-cloud-credentials
+          key: prometheus-user
+    - name: LOKI_URL
+      valueFrom:
+        secretKeyRef:
+          name: grafana-cloud-credentials
+          key: loki-url
+    - name: LOKI_USER
+      valueFrom:
+        secretKeyRef:
+          name: grafana-cloud-credentials
+          key: loki-user
+    - name: API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: grafana-cloud-credentials
+          key: api-key
