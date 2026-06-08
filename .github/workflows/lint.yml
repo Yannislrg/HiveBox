@@ -23,10 +23,13 @@ jobs:
         run: uv python install 3.13
 
       - name: Install dependencies
-        run: uv sync --dev
+        run: uv sync --frozen --dev
       
       - name: Lint with flake8
         run: uv run flake8 src/
+
+      - name: Lint with pylint
+        run: PYTHONPATH=. uv run pylint src/ --fail-under=8
   
   lint_docker:
     timeout-minutes: 3

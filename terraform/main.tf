@@ -22,6 +22,10 @@ resource "google_container_cluster" "gke_cluster" {
             disabled = false
         }
     }
+    private_cluster_config {
+        enable_private_nodes    = true
+        enable_private_endpoint = false
+    }
 }
 
 resource "google_container_node_pool" "primary_nodes" {

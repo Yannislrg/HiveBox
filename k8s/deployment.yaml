@@ -13,13 +13,33 @@ spec:
     metadata:
       labels:
         app: HiveBox
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/hivebox-container: runtime/default
+        seccomp.security.alpha.kubernetes.io/pod: runtime/default
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: hivebox-container
-          image: ghcr.io/yannislrg/hivebox:latest
+          image: ghcr.io/yannislrg/hivebox:0.1.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: BASE_URL
               value: "https://api.opensensemap.org"
@@ -43,9 +63,11 @@ spec:
             requests:
               cpu: 100m
               memory: 128Mi
+              ephemeral-storage: 128Mi
             limits:
               cpu: 200m
               memory: 256Mi
+              ephemeral-storage: 256Mi
           livenessProbe:
             httpGet:
               path: /version

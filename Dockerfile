@@ -8,7 +8,7 @@ ENV UV_COMPILE_BYTECODE=1
 
 COPY pyproject.toml uv.lock ./
 
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev --no-build
 
 
 FROM python:3.13-slim

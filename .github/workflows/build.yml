@@ -8,7 +8,7 @@ on:
     branches: [ "main" ]
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -39,6 +39,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -47,3 +48,14 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:${{ env.VERSION }}
             ${{ env.IMAGE_NAME }}:latest
+
+      - name: Pin image digest in deployment.yaml
+        if: github.event_name == 'push'
+        run: |
+          DIGEST="${{ steps.build.outputs.digest }}"
+          sed -i "s|image: ghcr.io/.*/hivebox.*|image: ${{ env.IMAGE_NAME }}@${DIGEST}|" k8s/deployment.yaml
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add k8s/deployment.yaml
+          git diff --cached --quiet || git commit -m "ci: pin image digest to ${DIGEST::19}"
+          git push
