@@ -2,3 +2,6 @@
 .env
 infra/*/*/*/charts/
 .gemini/settings.json
+terraform.tfvars
+.terraform/
+terraform.tfstate.backup

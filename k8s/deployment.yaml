@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
         - name: hivebox-container
-          image: hivebox:local
-          imagePullPolicy: Never
+          image: ghcr.io/yannislrg/hivebox:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           env:
@@ -40,12 +40,12 @@ spec:
             - name: VALKEY_TTL
               value: "300"
           resources:
-            limits:
-              memory: "512M"
-              cpu: "500m"
             requests:
-              memory: "256M"
-              cpu: "250m"
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
           livenessProbe:
             httpGet:
               path: /version
