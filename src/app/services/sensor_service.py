@@ -1,8 +1,12 @@
+"""Sensor data fetching and caching service."""
+
 import logging
 import os
-import requests
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
+
+import requests
+
 from src.app.routes.metrics import HEALTHY_BOXES_COUNT, CACHE_MISS_COUNT
 from src.app.services.valkey_service import valkey_service
 
@@ -12,8 +16,10 @@ BASE_URL = os.getenv("BASE_URL")
 BOX_IDS = os.getenv("BOX_ID").split(",") if os.getenv("BOX_ID") else []
 VALKEY_CACHE_KEY = "sensor_data"
 
+
 class SensorService:
     """Service to manage sensor data fetching and health status."""
+
     def __init__(self):
         self.cache: Dict[str, dict] = {}
         self.last_fetch_time: Optional[datetime] = None
@@ -30,8 +36,8 @@ class SensorService:
                 new_cache[box_id] = response.json()
                 self.box_statuses[box_id] = True
                 reachable += 1
-            except Exception:
-                logger.warning(f"Failed to fetch data for box {box_id}")
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.warning("Failed to fetch data for box %s", box_id)
                 self.box_statuses[box_id] = False
 
         if reachable > 0:
@@ -55,7 +61,7 @@ class SensorService:
         if not self.last_fetch_time or (now - self.last_fetch_time > timedelta(minutes=1)):
             CACHE_MISS_COUNT.inc()
             self.fetch_all_data()
-        
+
         return self.cache
 
     def is_healthy(self) -> bool:
@@ -65,7 +71,6 @@ class SensorService:
             return True
 
         unreachable_count = sum(1 for status in self.box_statuses.values() if not status)
-
         threshold = (total_boxes // 2) + 1
         is_majority_unreachable = unreachable_count >= threshold
 
@@ -77,9 +82,7 @@ class SensorService:
             if cache_age <= timedelta(minutes=5):
                 is_cache_stale = False
 
-        if is_majority_unreachable and is_cache_stale:
-            return False
+        return not (is_majority_unreachable and is_cache_stale)
 
-        return True
 
 sensor_service = SensorService()

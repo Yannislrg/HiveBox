@@ -1,20 +1,24 @@
-import os
-import redis
-import logging
+"""Valkey (Redis-compatible) cache service."""
+
 import json
-from typing import Optional, Any
+import logging
+import os
+from typing import Any, Optional
+
+import redis
 
 logger = logging.getLogger(__name__)
+
 
 class ValkeyService:
     """Service to handle connection and operations with Valkey (Redis compatible)."""
 
     def __init__(self):
         self.host = os.getenv("VALKEY_HOST", "localhost")
-        self.port = int(os.getenv("VALKEY_PORT", 6379))
-        self.password = os.getenv("VALKEY_PASSWORD", None)
-        self.db = int(os.getenv("VALKEY_DB", 0))
-        self.ttl = int(os.getenv("VALKEY_TTL", 300))
+        self.port = int(os.getenv("VALKEY_PORT", "6379"))
+        self.password = os.getenv("VALKEY_PASSWORD")
+        self.db = int(os.getenv("VALKEY_DB", "0"))
+        self.ttl = int(os.getenv("VALKEY_TTL", "300"))
 
         self.client: Optional[redis.Redis] = None
         self._connect()
@@ -28,12 +32,12 @@ class ValkeyService:
                 password=self.password,
                 db=self.db,
                 decode_responses=True,
-                socket_timeout=5
+                socket_timeout=5,
             )
             self.client.ping()
-            logger.info(f"Connected to Valkey at {self.host}:{self.port}")
-        except Exception as e:
-            logger.error(f"Failed to connect to Valkey at {self.host}:{self.port}: {e}")
+            logger.info("Connected to Valkey at %s:%s", self.host, self.port)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.error("Failed to connect to Valkey at %s:%s: %s", self.host, self.port, e)
             self.client = None
 
     def get(self, key: str) -> Optional[Any]:
@@ -44,8 +48,8 @@ class ValkeyService:
             data = self.client.get(key)
             if data:
                 return json.loads(data)
-        except Exception as e:
-            logger.warning(f"Error getting key {key} from Valkey: {e}")
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.warning("Error getting key %s from Valkey: %s", key, e)
         return None
 
     def set(self, key: str, value: Any, ttl: Optional[int] = None):
@@ -55,8 +59,8 @@ class ValkeyService:
         try:
             ttl = ttl or self.ttl
             self.client.set(key, json.dumps(value), ex=ttl)
-        except Exception as e:
-            logger.warning(f"Error setting key {key} in Valkey: {e}")
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.warning("Error setting key %s in Valkey: %s", key, e)
 
     def is_available(self) -> bool:
         """Check if Valkey is available."""
@@ -64,7 +68,8 @@ class ValkeyService:
             return False
         try:
             return self.client.ping()
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             return False
+
 
 valkey_service = ValkeyService()
