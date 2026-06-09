@@ -80,7 +80,8 @@ class SensorService:
         is_majority_unreachable = unreachable_count >= threshold
 
         is_cache_stale = True
-        if valkey_service.is_available() and valkey_service.get(VALKEY_CACHE_KEY):
+        if (valkey_service.is_available()
+                and valkey_service.get(VALKEY_CACHE_KEY)):
             is_cache_stale = False
         elif self.last_fetch_time:
             cache_age = datetime.now(timezone.utc) - self.last_fetch_time

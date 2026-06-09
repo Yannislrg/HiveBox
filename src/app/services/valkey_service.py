@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class ValkeyService:
-    """Service to handle connection and operations with Valkey (Redis compatible)."""
+    """Service to handle connection and operations with Valkey (Redis-compatible)."""
 
     def __init__(self):
         self.host = os.getenv("VALKEY_HOST", "localhost")

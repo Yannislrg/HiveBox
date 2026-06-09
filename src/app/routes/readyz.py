@@ -19,6 +19,8 @@ def readiness_check():
         "Readiness probe failed: majority of boxes unreachable and cache is stale"
     )
     return Response(
-        content="Service Unhealthy: mayoría de sensores inalcanzables y caché expirada",
+        content=(
+            "Service Unhealthy: majority of sensors unreachable and cache expired"
+        ),
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE
     )

@@ -47,7 +47,9 @@ class StorageService:
         except ClientError as e:
             error_code = e.response['Error']['Code']
             if error_code == '404':
-                logger.info(f"Bucket {MINIO_BUCKET} does not exist. Creating it.")
+                logger.info(
+                    f"Bucket {MINIO_BUCKET} does not exist. Creating it."
+                )
                 self.s3.create_bucket(Bucket=MINIO_BUCKET)
                 self._bucket_checked = True
             else:
