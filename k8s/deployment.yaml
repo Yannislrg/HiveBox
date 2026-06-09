@@ -13,10 +13,18 @@ spec:
     metadata:
       labels:
         app: HiveBox
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/hivebox-container: runtime/default
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: hivebox-container
-          image: ghcr.io/yannislrg/hivebox:latest
+          image: ghcr.io/yannislrg/hivebox@sha256:placeholder
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
@@ -46,6 +54,14 @@ spec:
             limits:
               cpu: 200m
               memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
           livenessProbe:
             httpGet:
               path: /version

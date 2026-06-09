@@ -71,7 +71,8 @@ HEALTHY_BOXES_COUNT = Gauge(
 # Counter: total cache misses
 CACHE_MISS_COUNT = Counter(
     "hivebox_cache_miss_total",
-    "Total number of times data was fetched from external API due to cache miss or expiry",
+    "Total number of times data was fetched from external API"
+    " due to cache miss or expiry",
 )
 
 

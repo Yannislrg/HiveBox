@@ -15,6 +15,7 @@ from src.app.services.storage_service import storage_service
 
 logger = logging.getLogger(__name__)
 
+
 async def periodic_storage():
     """Background task to store sensor data every 5 minutes."""
     while True:
@@ -28,8 +29,9 @@ async def periodic_storage():
                 logger.warning("No data available for periodic storage")
         except Exception as e:
             logger.error(f"Periodic storage task failed: {e}")
-        
+
         await asyncio.sleep(300)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -41,6 +43,7 @@ async def lifespan(app: FastAPI):
         await storage_task
     except asyncio.CancelledError:
         logger.info("Periodic storage task cancelled")
+
 
 app = FastAPI(title="HiveBox", lifespan=lifespan)
 app.include_router(version_router)

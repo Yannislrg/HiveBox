@@ -6,6 +6,7 @@ from typing import Optional, Any
 
 logger = logging.getLogger(__name__)
 
+
 class ValkeyService:
     """Service to handle connection and operations with Valkey (Redis compatible)."""
 
@@ -33,7 +34,9 @@ class ValkeyService:
             self.client.ping()
             logger.info(f"Connected to Valkey at {self.host}:{self.port}")
         except Exception as e:
-            logger.error(f"Failed to connect to Valkey at {self.host}:{self.port}: {e}")
+            logger.error(
+                f"Failed to connect to Valkey at {self.host}:{self.port}: {e}"
+            )
             self.client = None
 
     def get(self, key: str) -> Optional[Any]:
@@ -66,5 +69,6 @@ class ValkeyService:
             return self.client.ping()
         except Exception:
             return False
+
 
 valkey_service = ValkeyService()

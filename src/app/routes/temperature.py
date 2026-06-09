@@ -56,7 +56,7 @@ def accumulate_temperature(data, box_id):
         reading = float(sensor["lastMeasurement"]["value"])
         temperature += reading
         box_active += 1
-        
+
         CURRENT_TEMPERATURE.labels(box_id=box_id).set(reading)
         status_str = set_status(reading)
         TEMP_STATUS.labels(box_id=box_id).set(STATUS_MAP.get(status_str, 1.0))
@@ -71,12 +71,12 @@ def get_avg_temperature():
     """return avg temperature value"""
     logger.info("Temperature endpoint requested")
     TEMP_ENDPOINT_REQUESTS.inc()
-    
+
     data_map = sensor_service.get_data()
-    
+
     total_temperature = 0.0
     total_active_sensors = 0
-    
+
     for box_id, data in data_map.items():
         box_temperature, active_sensors = accumulate_temperature(data, box_id)
         total_temperature += box_temperature
@@ -92,7 +92,7 @@ def get_avg_temperature():
     avg_temperature = total_temperature / total_active_sensors
     rounded_temp = round(avg_temperature, 2)
     status = set_status(avg_temperature)
-    
+
     return {
         "average_temperature": rounded_temp,
         "status": status,

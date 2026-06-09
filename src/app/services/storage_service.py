@@ -8,13 +8,17 @@ from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 
-MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "http://minio-infra.minio.svc.cluster.local:9000")
+MINIO_ENDPOINT = os.getenv(
+    "MINIO_ENDPOINT", "http://minio-infra.minio.svc.cluster.local:9000"
+)
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
 MINIO_BUCKET = os.getenv("MINIO_BUCKET", "hivebox-data")
 
+
 class StorageService:
     """Service to handle data persistence in S3-compatible storage."""
+
     def __init__(self):
         self._s3 = None
         self._bucket_checked = False
@@ -68,5 +72,6 @@ class StorageService:
         except Exception as e:
             logger.error(f"Failed to store data in MinIO: {e}")
             raise e
+
 
 storage_service = StorageService()
