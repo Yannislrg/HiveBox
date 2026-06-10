@@ -33,8 +33,11 @@ jobs:
             | grep -oE 'image: [^ ]+' | awk '{print $2}' | sort -u)
           for IMAGE in $IMAGES; do
             echo "Pulling $IMAGE..."
-            docker pull "$IMAGE"
-            kind load docker-image "$IMAGE" --name hivebox-e2e
+            if docker pull "$IMAGE"; then
+              kind load docker-image "$IMAGE" --name hivebox-e2e
+            else
+              echo "Warning: could not pull $IMAGE, skipping."
+            fi
           done
 
       - name: Deploy Infrastructure (Valkey, Minio)

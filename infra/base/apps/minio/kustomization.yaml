@@ -13,3 +13,4 @@ helmCharts:
       persistence:
         enabled: false
       defaultBuckets: hivebox-data
+      disableWebUI: true
