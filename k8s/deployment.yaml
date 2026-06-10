@@ -13,14 +13,14 @@ spec:
     metadata:
       labels:
         app: HiveBox
-      annotations:
-        container.apparmor.security.beta.kubernetes.io/hivebox-container: runtime/default
     spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
         runAsGroup: 1000
         seccompProfile:
+          type: RuntimeDefault
+        appArmorProfile:
           type: RuntimeDefault
       containers:
         - name: hivebox-container
