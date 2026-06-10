@@ -44,4 +44,4 @@ testcases:
     assertions:
     - result.statuscode ShouldEqual 200
     - result.bodyjson.message ShouldEqual "Data stored successfully"
-    - result.bodyjson.filename ShouldContain ".json"
+    - result.bodyjson.filename ShouldContainSubstring ".json"
