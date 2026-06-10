@@ -19,10 +19,25 @@ jobs:
           config: k8s/kind-config.yaml
           cluster_name: hivebox-e2e
 
-      - name: Build and Load Docker Image
+      - name: Build and Load HiveBox Docker Image
         run: |
           docker build -t hivebox:local .
           kind load docker-image hivebox:local --name hivebox-e2e
+
+      - name: Pre-pull and Load Infrastructure Images into KIND
+        run: |
+          IMAGES=(
+            "docker.io/bitnami/redis:7.2.2-debian-11-r0"
+            "docker.io/bitnami/minio:2023.7.18-debian-11-r0"
+            "docker.io/bitnami/minio-client:2023.7.18-debian-11-r0"
+            "docker.io/bitnami/os-shell:11-debian-11-r90"
+            "docker.io/bitnami/os-shell:11-debian-11-r11"
+          )
+          for IMAGE in "${IMAGES[@]}"; do
+            echo "Pulling $IMAGE..."
+            docker pull "$IMAGE"
+            kind load docker-image "$IMAGE" --name hivebox-e2e
+          done
 
       - name: Install Kustomize
         uses: imranismail/setup-kustomize@v2
@@ -32,21 +47,19 @@ jobs:
           kustomize build --enable-helm infra/base | kubectl apply -f -
           echo "Waiting for Namespaces..."
           kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/valkey namespace/minio --timeout=60s
-          
+
           echo "Waiting for Infrastructure Pods..."
-          # Wait for pods to be created before waiting for readiness
           sleep 10
           kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=redis -n valkey --timeout=180s
           kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=minio -n minio --timeout=180s
 
       - name: Deploy HiveBox
         run: |
-          # Patch deployment to use local image
-          sed -i 's|image: ghcr.io/yannislrg/hivebox:latest|image: hivebox:local|' k8s/deployment.yaml
+          sed -i 's|image: ghcr.io/yannislrg/hivebox@sha256:placeholder|image: hivebox:local|' k8s/deployment.yaml
           sed -i 's|imagePullPolicy: Always|imagePullPolicy: IfNotPresent|' k8s/deployment.yaml
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
-          
+
           echo "Waiting for HiveBox to be ready..."
           kubectl wait --for=condition=available deployment/hivebox-deployment --timeout=120s
 
@@ -58,11 +71,9 @@ jobs:
 
       - name: Run E2E Tests
         run: |
-          # Port-forward in background
           kubectl port-forward service/hivebox-service 8080:80 &
           PF_PID=$!
-          
-          # Wait for port-forward to be active
+
           echo "Waiting for port-forward..."
           for i in {1..10}; do
             if curl -s http://localhost:8080/version > /dev/null 2>&1; then
@@ -71,11 +82,9 @@ jobs:
             fi
             sleep 2
           done
-          
-          # Run venom
+
           venom run tests/e2e/hivebox.yml --var base_url=http://localhost:8080
-          
-          # Kill port-forward
+
           kill $PF_PID
 
       - name: Debug on Failure
