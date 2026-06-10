@@ -22,6 +22,9 @@ spec:
           type: RuntimeDefault
         appArmorProfile:
           type: RuntimeDefault
+      volumes:
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: hivebox-container
           image: ghcr.io/yannislrg/hivebox@sha256:placeholder
@@ -42,11 +45,16 @@ spec:
             - name: MINIO_BUCKET
               value: "hivebox-data"
             - name: VALKEY_HOST
-              value: "valkey-infra-master.valkey.svc.cluster.local"
+              value: "valkey-infra-redis-master.valkey.svc.cluster.local"
             - name: VALKEY_PORT
               value: "6379"
             - name: VALKEY_TTL
               value: "300"
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           resources:
             requests:
               cpu: 100m
