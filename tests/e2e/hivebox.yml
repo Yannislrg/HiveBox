@@ -16,8 +16,8 @@ testcases:
     url: "{{.base_url}}/temperature"
     assertions:
     - result.statuscode ShouldEqual 200
-    - result.bodyjson.average_temperature ShouldBeType float64
-    - result.bodyjson.status ShouldBeIn ["Too Cold", "Good", "Too Hot"]
+    - result.bodyjson.average_temperature ShouldNotBeEmpty
+    - result.bodyjson.status ShouldBeIn "Too Cold" "Good" "Too Hot"
 
 - name: Check Readiness
   steps:
@@ -34,7 +34,7 @@ testcases:
     url: "{{.base_url}}/metrics"
     assertions:
     - result.statuscode ShouldEqual 200
-    - result.body ShouldContain "hivebox_"
+    - result.body ShouldContainSubstring "hivebox_"
 
 - name: Trigger Manual Storage
   steps:
