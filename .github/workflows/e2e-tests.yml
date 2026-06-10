@@ -24,23 +24,18 @@ jobs:
           docker build -t hivebox:local .
           kind load docker-image hivebox:local --name hivebox-e2e
 
+      - name: Install Kustomize
+        uses: imranismail/setup-kustomize@v2
+
       - name: Pre-pull and Load Infrastructure Images into KIND
         run: |
-          IMAGES=(
-            "docker.io/bitnami/redis:7.2.2-debian-11-r0"
-            "docker.io/bitnami/minio:2023.7.18-debian-11-r0"
-            "docker.io/bitnami/minio-client:2023.7.18-debian-11-r0"
-            "docker.io/bitnami/os-shell:11-debian-11-r90"
-            "docker.io/bitnami/os-shell:11-debian-11-r11"
-          )
-          for IMAGE in "${IMAGES[@]}"; do
+          IMAGES=$(kustomize build --enable-helm infra/base \
+            | grep -oE 'image: [^ ]+' | awk '{print $2}' | sort -u)
+          for IMAGE in $IMAGES; do
             echo "Pulling $IMAGE..."
             docker pull "$IMAGE"
             kind load docker-image "$IMAGE" --name hivebox-e2e
           done
-
-      - name: Install Kustomize
-        uses: imranismail/setup-kustomize@v2
 
       - name: Deploy Infrastructure (Valkey, Minio)
         run: |
