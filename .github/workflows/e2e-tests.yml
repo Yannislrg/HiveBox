@@ -24,25 +24,21 @@ jobs:
           docker build -t hivebox:local .
           kind load docker-image hivebox:local --name hivebox-e2e
 
-      - name: Install Kustomize
-        uses: imranismail/setup-kustomize@v2
-
       - name: Pre-pull and Load Infrastructure Images into KIND
         run: |
-          IMAGES=$(kustomize build --enable-helm infra/base \
-            | grep -oE 'image: [^ ]+' | awk '{print $2}' | sort -u)
-          for IMAGE in $IMAGES; do
+          IMAGES=(
+            "valkey/valkey:8-alpine"
+            "quay.io/minio/minio:latest"
+          )
+          for IMAGE in "${IMAGES[@]}"; do
             echo "Pulling $IMAGE..."
-            if docker pull "$IMAGE"; then
-              kind load docker-image "$IMAGE" --name hivebox-e2e
-            else
-              echo "Warning: could not pull $IMAGE, skipping."
-            fi
+            docker pull "$IMAGE"
+            kind load docker-image "$IMAGE" --name hivebox-e2e
           done
 
       - name: Deploy Infrastructure (Valkey, Minio)
         run: |
-          kustomize build --enable-helm infra/base | kubectl apply -f -
+          kubectl apply -k infra/base
           echo "Waiting for Namespaces..."
           kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/valkey namespace/minio --timeout=60s
 

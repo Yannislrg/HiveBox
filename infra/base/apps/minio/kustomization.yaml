@@ -1,16 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-helmCharts:
-  - name: minio
-    repo: https://charts.bitnami.com/bitnami
-    releaseName: minio-infra
-    namespace: minio
-    valuesInline:
-      auth:
-        rootUser: minioadmin
-        rootPassword: minioadmin
-      persistence:
-        enabled: false
-      defaultBuckets: hivebox-data
-      disableWebUI: true
+resources:
+  - deployment.yaml
+  - service.yaml

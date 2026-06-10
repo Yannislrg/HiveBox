@@ -220,7 +220,7 @@ kind create cluster --config k8s/kind-config.yaml
 #### 2. Déploiement de l'Infrastructure (Valkey & MinIO)
 Utilise Kustomize avec le support Helm pour installer les dépendances :
 ```bash
-kustomize build --enable-helm infra/base | kubectl apply -f -
+kubectl apply -k infra/base
 
 # Attendre que les pods soient prêts
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=redis -n valkey --timeout=120s
@@ -304,7 +304,7 @@ Pour tester l'application avec ses dépendances réelles (Valkey, Minio) :
 kind create cluster --config k8s/kind-config.yaml
 
 # Déployer l'infrastructure (Valkey + Minio)
-kustomize build --enable-helm infra/base | kubectl apply -f -
+kubectl apply -k infra/base
 ```
 
 ### 5. Exécution de l'Application
