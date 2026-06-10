@@ -6,7 +6,6 @@ helmCharts:
     repo: https://charts.bitnami.com/bitnami
     releaseName: valkey-infra
     namespace: valkey
-    version: 18.2.0
     valuesInline:
       auth:
         enabled: false

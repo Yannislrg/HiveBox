@@ -6,7 +6,6 @@ helmCharts:
     repo: https://charts.bitnami.com/bitnami
     releaseName: minio-infra
     namespace: minio
-    version: 12.8.0
     valuesInline:
       auth:
         rootUser: minioadmin
