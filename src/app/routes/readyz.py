@@ -15,7 +15,9 @@ def readiness_check():
     if sensor_service.is_healthy():
         return Response(status_code=status.HTTP_200_OK)
 
-    msg = "Service Unhealthy: majority of sensors unreachable and cache expired"
+    msg = (
+        "Service Unhealthy: majority of sensors unreachable and cache expired"
+    )
     logger.error(
         "Readiness probe failed: majority of boxes unreachable and cache stale"
     )

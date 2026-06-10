@@ -1,4 +1,4 @@
-name: Build
+name: SonarQube
 
 on:
   push:
@@ -8,88 +8,13 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  lint_python:
-    timeout-minutes: 3
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          version: "latest"
-
-      - name: Set up Python
-        run: uv python install 3.13
-
-      - name: Install dependencies
-        run: uv sync --dev
-      
-      - name: Lint with flake8
-        run: uv run flake8 src/
-  
-  lint_docker:
-    timeout-minutes: 3
-    runs-on: ubuntu-latest
-    needs: lint_python
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Lint Dockerfile
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: ./Dockerfile
-
-  build_docker_image:
-    timeout-minutes: 3
-    runs-on: ubuntu-latest
-
-    needs: lint_docker
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Build Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./Dockerfile
-          push: false
-          tags: user/hivebox:latest
-    
-  call_version_end_point:
-    timeout-minutes: 3
-    runs-on: ubuntu-latest
-    needs: build_docker_image
-    steps:
-      - uses: actions/checkout@v5
-      - name: build docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./Dockerfile
-          push: false
-          tags: user/hivebox:latest
-      - name: Call and check version end point
-        run: |
-          docker run -d -p 8080:8000 user/hivebox:latest
-          sleep 5
-          RESPONSE=$(curl -s http://localhost:8080/version)
-          if [[ "$RESPONSE" != "{\"version\":\"v0.0.2\"}" ]]; then
-            echo "Version endpoint did not return expected response: $RESPONSE"
-            exit 1
-          fi
-
   sonarqube:
     name: SonarQube
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
         env:

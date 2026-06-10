@@ -122,7 +122,6 @@ graph TB
     style Minio_Pod fill:#e8f5e9,stroke:#2e7d32
     style Ingress fill:#fff3e0,stroke:#ff9800
 ```
-```
 
 ## Structure du Projet
 
@@ -261,10 +260,10 @@ Accédez ensuite à : `http://localhost:8000/temperature`
 
 ### Configuration Kubernetes
 Les fichiers se trouvent dans k8s/ :
-- `deployment.yaml` : Gère les réplicas, les ressources (CPU/RAM), la sécurité (non-root, read-only) et les variables d'environnement.
+- `deployment.yaml` : Gère les réplicas, les ressources (CPU/RAM), le contexte de sécurité (non-root, read-only filesystem, seccomp, AppArmor, drop ALL capabilities) et les variables d'environnement.
 - `secret.yaml` : Gère les identifiants sensibles (MinIO).
 - `service.yaml` : Expose l'application en interne.
-- `ingress.yaml` : Permet l'accès externe via `hivebox.local`.
+- `ingress.yaml` : Permet l'accès externe via `hivebox.local` (TLS activé, redirection HTTP→HTTPS forcée).
 
 ## Guide de Démarrage (Développement)
 
@@ -305,7 +304,7 @@ Pour tester l'application avec ses dépendances réelles (Valkey, Minio) :
 kind create cluster --config k8s/kind-config.yaml
 
 # Déployer l'infrastructure (Valkey + Minio)
-kubectl apply -k infra/base
+kustomize build --enable-helm infra/base | kubectl apply -f -
 ```
 
 ### 5. Exécution de l'Application
