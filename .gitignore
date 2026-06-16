@@ -5,3 +5,4 @@ infra/*/*/*/charts/
 terraform.tfvars
 .terraform/
 terraform.tfstate.backup
+project.pdf

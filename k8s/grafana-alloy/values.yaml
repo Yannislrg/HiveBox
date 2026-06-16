@@ -1,3 +1,9 @@
+rbac:
+  create: true
+
+serviceAccount:
+  create: true
+
 alloy:
   configMap:
     create: true
@@ -37,12 +43,11 @@ alloy:
           source_labels = ["__meta_kubernetes_pod_container_name"]
           target_label  = "container"
         }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-          separator     = "/"
-          target_label  = "__path__"
-          replacement   = "/var/log/pods/*$1*/$2/*.log"
-        }
+      }
+
+      loki.source.kubernetes "pods" {
+        targets    = discovery.relabel.pods.output
+        forward_to = [loki.write.grafana_cloud.receiver]
       }
 
       loki.source.kubernetes_events "cluster_events" {

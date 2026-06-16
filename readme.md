@@ -1,5 +1,7 @@
 # HiveBox
 
+> Pour le déploiement complet de la stack, voir [DEPLOYMENT.md](DEPLOYMENT.md).
+
 HiveBox est une application FastAPI conçue pour agréger et surveiller les données de température provenant de plusieurs capteurs via l'API OpenSenseMap. Elle expose des métriques au format Prometheus pour une intégration facile avec les outils de monitoring.
 
 ## Fonctionnalités
@@ -159,12 +161,20 @@ venom run tests/e2e/hivebox.yml --var base_url=http://localhost:8000
 ## CI/CD (GitHub Actions)
 
 Plusieurs workflows sont en place pour assurer la stabilité du projet :
-- **Lint** : Vérifie le style du code Python et du Dockerfile.
-- **Tests** : Exécute la suite pytest sur chaque PR.
-- **Build** : Valide la création de l'image Docker.
-- **SonarQube** : Analyse de la qualité du code et respect des normes de sécurité associées.
-- **Scorecard** : Analyse de sécurité OpenSSF.
-- **Terrascan** : Scan de sécurité des fichiers d'infrastructure.
+
+| Workflow | Fichier | Déclencheur | Description |
+|---|---|---|---|
+| Lint | `lint.yml` | push, PR | Vérification du style Python (`flake8`) et du Dockerfile (`hadolint`) |
+| Tests unitaires & intégration | `tests.yml` | push, PR | Suite `pytest` complète |
+| Tests d'intégration | `integration-tests.yml` | push, PR | Tests d'intégration avec dépendances réelles |
+| Tests E2E | `e2e-tests.yml` | push `main` | Tests Venom sur cluster KIND |
+| Build | `build.yml` | push `main`, tags | Build et push de l'image sur GHCR |
+| Pipeline principal | `main.yml` | push `main` | Orchestration du pipeline complet |
+| SonarQube | *(main.yml)* | push `main` | Analyse qualité et sécurité du code (SAST) |
+| Terrascan | `terrascan.yml` | push, PR | Scan de sécurité des manifestes d'infrastructure |
+| OpenSSF Scorecard | `scorecard.yml` | hebdomadaire | Audit de sécurité de la supply chain |
+
+> **Semgrep** est intégré directement via l'application web Semgrep Cloud pour l'analyse statique continue du dépôt.
 
 ## Pratiques DevOps & CD (Best Practices)
 
@@ -182,6 +192,29 @@ Le projet intègre les meilleures pratiques de l'industrie pour garantir une liv
 - **Gestion des Dépendances** : Utilisation de `uv` pour garantir des environnements de build reproductibles et ultra-rapides via `uv.lock`.
 - **Infrastructure as Code (IaC)** : Définition de l'infrastructure via Kustomize et Helm, permettant un déploiement versionné et auditable.
 - **Observabilité & Santé** : Implémentation native de métriques Prometheus et de health checks avancés (Sondes K8s).
+
+## Observabilité
+
+### Métriques Prometheus
+
+L'endpoint `/metrics` expose les métriques au format Prometheus. La collecte et la transmission vers Grafana Cloud sont assurées par **Grafana Alloy**, déployé dans le cluster Kubernetes.
+
+Alloy scrape `/metrics` toutes les 30 secondes et pousse les données vers Prometheus Remote Write, et collecte également les logs des pods via Loki.
+
+Configuration : [`k8s/grafana-alloy/values.yaml`](k8s/grafana-alloy/values.yaml)
+
+### Dashboard Grafana
+
+Un dashboard préconstruit est disponible dans [`k8s/grafana-dashboard.json`](k8s/grafana-dashboard.json).
+
+**Import** : Grafana → Dashboards → Import → uploader le fichier JSON → sélectionner la datasource Prometheus.
+
+Il couvre :
+- Vue d'ensemble : état du service, capteurs actifs, température moyenne, trafic, cache miss
+- Température par capteur (courbes, jauge, histogramme de distribution)
+- Trafic API par endpoint (req/s, répartition, totaux)
+- Cache Valkey : évolution des miss, taux de hit estimé
+- Santé des capteurs : disponibilité et statut dans le temps
 
 ## Docker
 
@@ -228,11 +261,11 @@ kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=minio -n minio 
 ```
 
 #### 3. Configuration des Secrets
-Créez votre fichier de secrets à partir de l'exemple (ce fichier est ignoré par Git) :
+Les credentials MinIO sont définis directement dans `k8s/deployment.yaml` via des variables d'environnement. Si vous souhaitez les externaliser dans un Secret Kubernetes :
 ```bash
-cp k8s/secret.yaml.example k8s/secret.yaml
-# Modifiez k8s/secret.yaml avec vos vraies valeurs si nécessaire
-kubectl apply -f k8s/secret.yaml
+kubectl create secret generic hivebox-minio-secret \
+  --from-literal=MINIO_ACCESS_KEY=minioadmin \
+  --from-literal=MINIO_SECRET_KEY=minioadmin
 ```
 
 #### 4. Déploiement de HiveBox
